@@ -1,0 +1,1 @@
+# sc-nft-collection-minter
