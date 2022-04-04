@@ -1,0 +1,9 @@
+[workspace]
+members = [
+  "collection-manager",
+  "collection-manager/meta",
+  "nft-minter",
+  "nft-minter/meta",
+  "royalties-handler",
+  "royalties-handler/meta",
+]
