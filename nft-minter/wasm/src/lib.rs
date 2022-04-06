@@ -7,7 +7,27 @@
 elrond_wasm_node::wasm_endpoints! {
     nft_minter
     (
+        callBack
+        addUserToAdminList
+        buyRandomNft
+        claimMintPayments
+        claimRoyalties
+        claimRoyaltiesFromMarketplace
+        getAccumulatedMintPayments
+        getAccumulatedRoyalties
+        getBrandInfo
+        getLastItemId
+        getMintPaymentsClaimAddress
+        getNftTokenIdForBrand
+        getParentCollectionId
+        getRegisteredBrands
+        getRoyaltiesClaimAddress
+        getTagsForBrand
+        givawayNft
+        issueTokenForBrand
+        removeUserFromAdminList
+        setLocalRoles
+        setMintPaymentsClaimAddress
+        setRoyaltiesClaimAddress
     )
 }
-
-elrond_wasm_node::wasm_empty_callback! {}
