@@ -28,9 +28,6 @@ pub trait NftMinter:
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
     ) {
-        let caller = self.blockchain().get_caller();
-        self.admin_whitelist().add(&caller);
-
         require!(!parent_collection_id.is_empty(), "Invalid collection ID");
 
         self.parent_collection_id().set(&parent_collection_id);

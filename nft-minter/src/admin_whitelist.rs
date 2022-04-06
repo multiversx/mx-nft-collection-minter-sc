@@ -16,6 +16,11 @@ pub trait AdminWhitelistModule {
 
     fn require_caller_is_admin(&self) {
         let caller = self.blockchain().get_caller();
+        let sc_owner = self.blockchain().get_owner_address();
+        if caller == sc_owner {
+            return;
+        }
+
         self.admin_whitelist().require_whitelisted(&caller);
     }
 
