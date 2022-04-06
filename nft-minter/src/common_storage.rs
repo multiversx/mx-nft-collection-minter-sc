@@ -8,9 +8,11 @@ pub type CollectionId<M> = ManagedBuffer<M>;
 pub type Tag<M> = ManagedBuffer<M>;
 pub type Uri<M> = ManagedBuffer<M>;
 pub type MediaType<M> = ManagedBuffer<M>;
+pub type GenericAttributes<M> = ManagedBuffer<M>;
 
 #[derive(TypeAbi, TopEncode, TopDecode)]
 pub struct BrandInfo<M: ManagedTypeApi> {
+    pub token_display_name: ManagedBuffer<M>,
     pub media_type: MediaType<M>,
     pub id_offset: usize,
     pub royalties: BigUint<M>,

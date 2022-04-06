@@ -6,6 +6,7 @@ use crate::{
     unique_id_mapper::{UniqueId, UniqueIdMapper},
 };
 
+const NFT_AMOUNT: u32 = 1;
 const NFT_ISSUE_COST: u64 = 50_000_000_000_000_000; // 0.05 EGLD
 const ROYALTIES_MAX: u32 = 10_000; // 100%
 const VEC_MAPPER_FIRST_ITEM_INDEX: usize = 1;
@@ -70,6 +71,7 @@ pub trait NftModule:
             prev_last_id
         });
         let brand_info = BrandInfo {
+            token_display_name: token_display_name.clone(),
             media_type,
             id_offset,
             royalties,
@@ -119,18 +121,56 @@ pub trait NftModule:
             .set_local_roles(&[EsdtLocalRole::NftCreate], None);
     }
 
+    #[payable("*")]
     #[endpoint(buyRandomNft)]
     fn buy_random_nft(&self, brand_id: BrandId<Self::Api>) {
         require!(
             self.registered_brands().contains(&brand_id),
             INVALID_BRAND_ID_ERR_MSG
         );
+
+        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
+        let payment: EsdtTokenPayment<Self::Api> = self.call_value().payment();
+        require!(
+            payment.token_identifier == brand_info.mint_price_token_id
+                && payment.amount == brand_info.mint_price_amount,
+            "Invalid payment"
+        );
+
+        let nft_id = self.get_next_random_id(&brand_id, brand_info.id_offset);
+        let nft_uri = self.build_nft_main_file_uri(nft_id, &brand_info.media_type);
+        let nft_json = self.build_nft_json_file_uri(nft_id);
+        let collection_json = self.build_collection_json_file_uri();
+
+        let mut uris = ManagedVec::new();
+        uris.push(nft_uri);
+        uris.push(nft_json);
+        uris.push(collection_json);
+
+        let attributes = self.build_nft_attributes(&brand_id, nft_id);
+        let nft_token_id = self.nft_token(&brand_id).get_token_id();
+        let nft_amount = BigUint::from(NFT_AMOUNT);
+        let nft_nonce = self.send().esdt_nft_create(
+            &nft_token_id,
+            &nft_amount,
+            &brand_info.token_display_name,
+            &brand_info.royalties,
+            &ManagedBuffer::new(),
+            &attributes,
+            &uris,
+        );
+
+        let caller = self.blockchain().get_caller();
+        self.send()
+            .direct(&caller, &nft_token_id, nft_nonce, &nft_amount, &[]);
     }
 
     fn get_next_random_id(&self, brand_id: &BrandId<Self::Api>, id_offset: usize) -> UniqueId {
         let mut id_mapper = self.available_ids(brand_id);
-        let last_nonce_index = id_mapper.len();
-        let rand_index = self.get_random_usize(VEC_MAPPER_FIRST_ITEM_INDEX, last_nonce_index + 1);
+        let last_id_index = id_mapper.len();
+        require!(last_id_index > 0, "No more NFTs available for brand");
+
+        let rand_index = self.get_random_usize(VEC_MAPPER_FIRST_ITEM_INDEX, last_id_index + 1);
         let rand_id = id_mapper.get_and_swap_remove(rand_index);
 
         rand_id + id_offset
