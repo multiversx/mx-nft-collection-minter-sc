@@ -158,7 +158,7 @@ pub trait NftModule:
         brand_id: &BrandId<Self::Api>,
         brand_info: &BrandInfo<Self::Api>,
     ) {
-        let nft_id = self.get_next_random_id(&brand_id, brand_info.id_offset);
+        let nft_id = self.get_next_random_id(brand_id, brand_info.id_offset);
         let nft_uri = self.build_nft_main_file_uri(nft_id, &brand_info.media_type);
         let nft_json = self.build_nft_json_file_uri(nft_id);
         let collection_json = self.build_collection_json_file_uri();
@@ -168,8 +168,8 @@ pub trait NftModule:
         uris.push(nft_json);
         uris.push(collection_json);
 
-        let attributes = self.build_nft_attributes(&brand_id, nft_id);
-        let nft_token_id = self.nft_token(&brand_id).get_token_id();
+        let attributes = self.build_nft_attributes(brand_id, nft_id);
+        let nft_token_id = self.nft_token(brand_id).get_token_id();
         let nft_amount = BigUint::from(NFT_AMOUNT);
         let nft_nonce = self.send().esdt_nft_create(
             &nft_token_id,

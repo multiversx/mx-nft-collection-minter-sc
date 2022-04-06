@@ -38,7 +38,7 @@ where
 {
     /// Manually overwrite VecMapper's len value
     pub fn set_initial_len(&mut self, len: usize) {
-        if self.vec_mapper.len() != 0 {
+        if !self.vec_mapper.is_empty() {
             SA::error_api_impl().signal_error(b"len already set");
         }
 
@@ -47,6 +47,10 @@ where
 
     pub fn len(&self) -> usize {
         self.vec_mapper.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.vec_mapper.is_empty()
     }
 
     pub fn get(&self, index: usize) -> UniqueId {
