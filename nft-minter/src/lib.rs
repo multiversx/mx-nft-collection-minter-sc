@@ -4,10 +4,11 @@ elrond_wasm::imports!();
 
 pub mod admin_whitelist;
 pub mod common_storage;
+pub mod nft_attributes_builder;
 pub mod nft_marketplace_interactor;
 pub mod nft_module;
-pub mod nonce_mapper;
 pub mod royalties;
+pub mod unique_id_mapper;
 
 use common_storage::CollectionId;
 
@@ -16,6 +17,7 @@ pub trait NftMinter:
     common_storage::CommonStorageModule
     + admin_whitelist::AdminWhitelistModule
     + nft_module::NftModule
+    + nft_attributes_builder::NftAttributesBuilderModule
     + royalties::RoyaltiesModule
     + nft_marketplace_interactor::NftMarketplaceInteractorModule
 {
@@ -28,6 +30,8 @@ pub trait NftMinter:
     ) {
         let caller = self.blockchain().get_caller();
         self.admin_whitelist().add(&caller);
+
+        require!(!parent_collection_id.is_empty(), "Invalid collection ID");
 
         self.parent_collection_id().set(&parent_collection_id);
         self.royalties_claim_address().set(&royalties_claim_address);

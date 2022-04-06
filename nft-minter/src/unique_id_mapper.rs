@@ -6,21 +6,21 @@ use elrond_wasm::{
     storage_set,
 };
 
-pub type Nonce = u64;
-const EMPTY_ENTRY: Nonce = 0;
+pub type UniqueId = usize;
+const EMPTY_ENTRY: UniqueId = 0;
 
 /// Holds the values from 1 to N with as little storage interaction as possible
 /// If Mapper[i] = i, then it stores nothing, i.e. "0"
 /// If Mapper[i] is equal to another value, then it stores the value
-pub struct NonceMapper<SA>
+pub struct UniqueIdMapper<SA>
 where
     SA: StorageMapperApi + CallTypeApi,
 {
     base_key: StorageKey<SA>,
-    vec_mapper: VecMapper<SA, Nonce>,
+    vec_mapper: VecMapper<SA, UniqueId>,
 }
 
-impl<SA> StorageMapper<SA> for NonceMapper<SA>
+impl<SA> StorageMapper<SA> for UniqueIdMapper<SA>
 where
     SA: StorageMapperApi + CallTypeApi,
 {
@@ -32,7 +32,7 @@ where
     }
 }
 
-impl<SA> NonceMapper<SA>
+impl<SA> UniqueIdMapper<SA>
 where
     SA: StorageMapperApi + CallTypeApi,
 {
@@ -49,17 +49,17 @@ where
         self.vec_mapper.len()
     }
 
-    pub fn get(&self, index: usize) -> Nonce {
+    pub fn get(&self, index: usize) -> UniqueId {
         // if there is no stored value, it means we have to return the index as the value
-        let nonce: Nonce = self.vec_mapper.get(index);
+        let nonce: UniqueId = self.vec_mapper.get(index);
         if nonce == EMPTY_ENTRY {
-            index as Nonce
+            index
         } else {
             nonce
         }
     }
 
-    pub fn get_and_swap_remove(&mut self, index: usize) -> Nonce {
+    pub fn get_and_swap_remove(&mut self, index: usize) -> UniqueId {
         let last_item_index = self.len();
         let last_item = self.get(last_item_index);
 

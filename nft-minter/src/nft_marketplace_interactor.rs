@@ -26,8 +26,6 @@ pub trait NftMarketplaceInteractorModule:
         marketplace_address: ManagedAddress,
         #[var_args] tokens: MultiValueEncoded<TokenIdentifier>,
     ) {
-        self.require_caller_is_admin();
-
         let mut args = MultiValueEncoded::new();
         for token in tokens {
             args.push((token, 0).into());

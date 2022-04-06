@@ -3,21 +3,28 @@ elrond_wasm::derive_imports!();
 
 use crate::{
     common_storage::{BrandId, BrandInfo, Tag},
-    nonce_mapper::NonceMapper,
+    unique_id_mapper::{UniqueId, UniqueIdMapper},
 };
 
-pub const NFT_ISSUE_COST: u64 = 50_000_000_000_000_000; // 0.05 EGLD
-pub const ROYALTIES_MAX: u32 = 10_000; // 100%
+const NFT_ISSUE_COST: u64 = 50_000_000_000_000_000; // 0.05 EGLD
+const ROYALTIES_MAX: u32 = 10_000; // 100%
+const VEC_MAPPER_FIRST_ITEM_INDEX: usize = 1;
+
+const MAX_BRAND_ID_LEN: usize = 50;
+static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
 
 #[elrond_wasm::module]
 pub trait NftModule:
-    crate::common_storage::CommonStorageModule + crate::admin_whitelist::AdminWhitelistModule
+    crate::common_storage::CommonStorageModule
+    + crate::admin_whitelist::AdminWhitelistModule
+    + crate::nft_attributes_builder::NftAttributesBuilderModule
 {
     #[payable("EGLD")]
     #[endpoint(issueTokenForBrand)]
     fn issue_token_for_brand(
         &self,
         brand_id: BrandId<Self::Api>,
+        media_type: ManagedBuffer,
         royalties: BigUint,
         max_nfts: usize,
         mint_start_epoch: u64,
@@ -27,12 +34,24 @@ pub trait NftModule:
         token_ticker: ManagedBuffer,
         #[var_args] tags: MultiValueEncoded<Tag<Self::Api>>,
     ) {
+        self.require_caller_is_admin();
+
+        let id_len = brand_id.len();
+        require!(
+            id_len > 0 && id_len <= MAX_BRAND_ID_LEN,
+            INVALID_BRAND_ID_ERR_MSG
+        );
+
         let payment_amount = self.call_value().egld_value();
         require!(
             payment_amount == NFT_ISSUE_COST,
             "Invalid payment amount. Issue costs exactly 0.05 EGLD"
         );
 
+        require!(
+            self.is_supported_media_type(&media_type),
+            "Invalid media type"
+        );
         require!(royalties <= ROYALTIES_MAX, "Royalties cannot be over 100%");
         require!(max_nfts > 0, "Cannot create brand with max 0 items");
         require!(
@@ -43,14 +62,23 @@ pub trait NftModule:
         let is_new_brand = self.registered_brands().insert(brand_id.clone());
         require!(is_new_brand, "Brand already exists");
 
+        let id_offset = self.last_item_id().update(|last_id| {
+            let prev_last_id = *last_id;
+            *last_id += max_nfts;
+            require!(*last_id > prev_last_id, "ID overflow!");
+
+            prev_last_id
+        });
         let brand_info = BrandInfo {
+            media_type,
+            id_offset,
             royalties,
             mint_start_epoch,
             mint_price_token_id,
             mint_price_amount,
         };
         self.brand_info(&brand_id).set(&brand_info);
-        self.available_nonces(&brand_id).set_initial_len(max_nfts);
+        self.available_ids(&brand_id).set_initial_len(max_nfts);
 
         if !tags.is_empty() {
             self.tags_for_brand(&brand_id).set(&tags.to_vec());
@@ -79,7 +107,7 @@ pub trait NftModule:
             ManagedAsyncCallResult::Err(_) => {
                 self.brand_info(&brand_id).clear();
                 self.tags_for_brand(&brand_id).clear();
-                self.available_nonces(&brand_id).clear_len();
+                self.available_ids(&brand_id).clear_len();
                 let _ = self.registered_brands().swap_remove(&brand_id);
             }
         }
@@ -91,10 +119,33 @@ pub trait NftModule:
             .set_local_roles(&[EsdtLocalRole::NftCreate], None);
     }
 
+    #[endpoint(buyRandomNft)]
+    fn buy_random_nft(&self, brand_id: BrandId<Self::Api>) {
+        require!(
+            self.registered_brands().contains(&brand_id),
+            INVALID_BRAND_ID_ERR_MSG
+        );
+    }
+
+    fn get_next_random_id(&self, brand_id: &BrandId<Self::Api>, id_offset: usize) -> UniqueId {
+        let mut id_mapper = self.available_ids(brand_id);
+        let last_nonce_index = id_mapper.len();
+        let rand_index = self.get_random_usize(VEC_MAPPER_FIRST_ITEM_INDEX, last_nonce_index + 1);
+        let rand_id = id_mapper.get_and_swap_remove(rand_index);
+
+        rand_id + id_offset
+    }
+
+    /// range is [min, max)
+    fn get_random_usize(&self, min: usize, max: usize) -> usize {
+        let mut rand_source = RandomnessSource::<Self::Api>::new();
+        rand_source.next_usize_in_range(min, max)
+    }
+
     #[view(getNftTokenIdForBrand)]
     #[storage_mapper("nftTokenId")]
     fn nft_token(&self, brand_id: &BrandId<Self::Api>) -> NonFungibleTokenMapper<Self::Api>;
 
-    #[storage_mapper("availableNonces")]
-    fn available_nonces(&self, brand_id: &BrandId<Self::Api>) -> NonceMapper<Self::Api>;
+    #[storage_mapper("availableIds")]
+    fn available_ids(&self, brand_id: &BrandId<Self::Api>) -> UniqueIdMapper<Self::Api>;
 }

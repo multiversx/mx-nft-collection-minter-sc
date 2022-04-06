@@ -6,9 +6,13 @@ pub type EgldValuePaymentsVecPair<M> = MultiValue2<BigUint<M>, PaymentsVec<M>>;
 pub type BrandId<M> = ManagedBuffer<M>;
 pub type CollectionId<M> = ManagedBuffer<M>;
 pub type Tag<M> = ManagedBuffer<M>;
+pub type Uri<M> = ManagedBuffer<M>;
+pub type MediaType<M> = ManagedBuffer<M>;
 
 #[derive(TypeAbi, TopEncode, TopDecode)]
 pub struct BrandInfo<M: ManagedTypeApi> {
+    pub media_type: MediaType<M>,
+    pub id_offset: usize,
     pub royalties: BigUint<M>,
     pub mint_start_epoch: u64,
     pub mint_price_token_id: TokenIdentifier<M>,
@@ -25,9 +29,9 @@ pub trait CommonStorageModule {
     #[storage_mapper("registeredBrands")]
     fn registered_brands(&self) -> UnorderedSetMapper<BrandId<Self::Api>>;
 
-    #[view(getBrandOwner)]
-    #[storage_mapper("brandOwner")]
-    fn brand_owner(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<ManagedAddress>;
+    #[view(getLastItemId)]
+    #[storage_mapper("lastItemId")]
+    fn last_item_id(&self) -> SingleValueMapper<usize>;
 
     #[view(getBrandInfo)]
     #[storage_mapper("brandInfo")]
