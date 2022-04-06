@@ -19,6 +19,7 @@ pub trait NftModule:
     crate::common_storage::CommonStorageModule
     + crate::admin_whitelist::AdminWhitelistModule
     + crate::nft_attributes_builder::NftAttributesBuilderModule
+    + crate::royalties::RoyaltiesModule
 {
     #[payable("EGLD")]
     #[endpoint(issueTokenForBrand)]
@@ -137,6 +138,26 @@ pub trait NftModule:
             "Invalid payment"
         );
 
+        self.add_mint_payment(payment.token_identifier, payment.amount);
+
+        let caller = self.blockchain().get_caller();
+        self.send_random_nft(&caller, &brand_id, &brand_info);
+    }
+
+    #[endpoint(givawayNft)]
+    fn giveaway_nft(&self, to: ManagedAddress, brand_id: BrandId<Self::Api>) {
+        self.require_caller_is_admin();
+
+        let brand_info = self.brand_info(&brand_id).get();
+        self.send_random_nft(&to, &brand_id, &brand_info);
+    }
+
+    fn send_random_nft(
+        &self,
+        to: &ManagedAddress,
+        brand_id: &BrandId<Self::Api>,
+        brand_info: &BrandInfo<Self::Api>,
+    ) {
         let nft_id = self.get_next_random_id(&brand_id, brand_info.id_offset);
         let nft_uri = self.build_nft_main_file_uri(nft_id, &brand_info.media_type);
         let nft_json = self.build_nft_json_file_uri(nft_id);
@@ -160,9 +181,8 @@ pub trait NftModule:
             &uris,
         );
 
-        let caller = self.blockchain().get_caller();
         self.send()
-            .direct(&caller, &nft_token_id, nft_nonce, &nft_amount, &[]);
+            .direct(to, &nft_token_id, nft_nonce, &nft_amount, &[]);
     }
 
     fn get_next_random_id(&self, brand_id: &BrandId<Self::Api>, id_offset: usize) -> UniqueId {
