@@ -144,7 +144,7 @@ pub trait NftModule:
         self.send_random_nft(&caller, &brand_id, &brand_info);
     }
 
-    #[endpoint(givawayNft)]
+    #[endpoint(giveawayNft)]
     fn giveaway_nft(&self, to: ManagedAddress, brand_id: BrandId<Self::Api>) {
         self.require_caller_is_admin();
 

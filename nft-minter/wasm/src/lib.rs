@@ -23,7 +23,7 @@ elrond_wasm_node::wasm_endpoints! {
         getRegisteredBrands
         getRoyaltiesClaimAddress
         getTagsForBrand
-        givawayNft
+        giveawayNft
         issueTokenForBrand
         removeUserFromAdminList
         setLocalRoles
