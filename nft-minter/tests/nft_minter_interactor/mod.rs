@@ -1,5 +1,8 @@
 use super::constants::*;
-use elrond_wasm::types::{Address, MultiValueEncoded};
+use elrond_wasm::{
+    elrond_codec::multi_types::OptionalValue,
+    types::{Address, EsdtLocalRole, MultiValueEncoded},
+};
 use elrond_wasm_debug::{
     managed_address, managed_biguint, managed_buffer, rust_biguint,
     testing_framework::{BlockchainStateWrapper, ContractObjWrapper},
@@ -57,7 +60,7 @@ where
         b_mock
             .execute_tx(&owner_address, &nm_wrapper, &rust_zero, |sc| {
                 sc.init(
-                    managed_buffer!(COLLECTION_ID),
+                    managed_buffer!(CATEGORY),
                     managed_address!(&owner_address),
                     managed_address!(&owner_address),
                 );
@@ -75,11 +78,12 @@ where
 
     pub fn create_default_brands(&mut self) {
         self.call_create_new_brand(
+            FIRST_COLLECTION_ID,
             FIRST_BRAND_ID,
             FIRST_MEDIA_TYPE,
             0,
             FIRST_MAX_NFTS,
-            FIRST_MINT_START_EPOCH,
+            FIRST_MINT_START_TIMESTAMP,
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT,
             FIRST_TOKEN_DISPLAY_NAME,
@@ -89,11 +93,12 @@ where
         .assert_ok();
 
         self.call_create_new_brand(
+            SECOND_COLLECTION_ID,
             SECOND_BRAND_ID,
             SECOND_MEDIA_TYPE,
             0,
             SECOND_MAX_NFTS,
-            SECOND_MINT_START_EPOCH,
+            SECOND_MINT_START_TIMESTAMP,
             SECOND_MINT_PRICE_TOKEN_ID,
             SECOND_MINT_PRICE_AMOUNT,
             SECOND_TOKEN_DISPLAY_NAME,
@@ -101,6 +106,39 @@ where
             SECOND_TAGS,
         )
         .assert_ok();
+
+        self.b_mock.set_esdt_local_roles(
+            self.nm_wrapper.address_ref(),
+            FIRST_TOKEN_ID,
+            &[EsdtLocalRole::NftCreate][..],
+        );
+        self.b_mock.set_esdt_local_roles(
+            self.nm_wrapper.address_ref(),
+            SECOND_TOKEN_ID,
+            &[EsdtLocalRole::NftCreate][..],
+        );
+    }
+
+    pub fn build_nft_attributes_first_token(&self, nft_id: usize) -> String {
+        let mut attr = "metadata:".to_owned();
+        attr += &String::from_utf8(FIRST_COLLECTION_ID.to_vec()).unwrap();
+        attr += "/";
+        attr += &nft_id.to_string();
+        attr += ".json;";
+        attr += "tags:funny,sad,memes";
+
+        attr
+    }
+
+    pub fn build_nft_attributes_second_token(&self, nft_id: usize) -> String {
+        let mut attr = "metadata:".to_owned();
+        attr += &String::from_utf8(SECOND_COLLECTION_ID.to_vec()).unwrap();
+        attr += "/";
+        attr += &nft_id.to_string();
+        attr += ".json;";
+        attr += "tags:random,good,best";
+
+        attr
     }
 }
 
@@ -110,6 +148,7 @@ where
 {
     pub fn call_create_new_brand(
         &mut self,
+        collection_id: &[u8],
         brand_id: &[u8],
         media_type: &[u8],
         royalties: u64,
@@ -132,6 +171,7 @@ where
                 }
 
                 sc.issue_token_for_brand(
+                    managed_buffer!(collection_id),
                     managed_buffer!(brand_id),
                     managed_buffer!(media_type),
                     managed_biguint!(royalties),
@@ -153,14 +193,21 @@ where
         payment_token: &[u8],
         payment_amount: u64,
         brand_id: &[u8],
+        nfts_to_buy: usize,
     ) -> TxResult {
-        if payment_token == &b"EGLD"[..] {
+        let opt_nft_amount = if nfts_to_buy == 1 {
+            OptionalValue::None
+        } else {
+            OptionalValue::Some(nfts_to_buy)
+        };
+
+        if payment_token == EGLD_TOKEN_ID {
             self.b_mock.execute_tx(
                 buyer_address,
                 &self.nm_wrapper,
                 &rust_biguint!(payment_amount),
                 |sc| {
-                    sc.buy_random_nft(managed_buffer!(brand_id));
+                    sc.buy_random_nft(managed_buffer!(brand_id), opt_nft_amount);
                 },
             )
         } else {
@@ -171,7 +218,7 @@ where
                 0,
                 &rust_biguint!(payment_amount),
                 |sc| {
-                    sc.buy_random_nft(managed_buffer!(brand_id));
+                    sc.buy_random_nft(managed_buffer!(brand_id), opt_nft_amount);
                 },
             )
         }
