@@ -147,7 +147,7 @@ pub trait NftModule:
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
-        self.send_random_nft(&caller, &brand_id, &brand_info);
+        self.mint_and_send_random_nft(&caller, &brand_id, &brand_info);
     }
 
     #[endpoint(giveawayNft)]
@@ -155,10 +155,10 @@ pub trait NftModule:
         self.require_caller_is_admin();
 
         let brand_info = self.brand_info(&brand_id).get();
-        self.send_random_nft(&to, &brand_id, &brand_info);
+        self.mint_and_send_random_nft(&to, &brand_id, &brand_info);
     }
 
-    fn send_random_nft(
+    fn mint_and_send_random_nft(
         &self,
         to: &ManagedAddress,
         brand_id: &BrandId<Self::Api>,
