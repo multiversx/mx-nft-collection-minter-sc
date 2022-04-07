@@ -14,6 +14,14 @@ const VEC_MAPPER_FIRST_ITEM_INDEX: usize = 1;
 const MAX_BRAND_ID_LEN: usize = 50;
 static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
 
+#[derive(TopEncode, TopDecode)]
+pub struct TempCallbackStorageInfo<M: ManagedTypeApi> {
+    pub brand_info: BrandInfo<M>,
+    pub price_for_brand: MintPrice<M>,
+    pub max_nfts: usize,
+    pub tags: ManagedVec<M, Tag<M>>,
+}
+
 #[elrond_wasm::module]
 pub trait NftModule:
     crate::common_storage::CommonStorageModule
@@ -71,7 +79,7 @@ pub trait NftModule:
         require!(is_new_brand, "Brand already exists");
 
         let brand_info = BrandInfo {
-            collection_id,
+            collection_id: collection_id.clone(),
             token_display_name: token_display_name.clone(),
             media_type,
             royalties,
@@ -81,13 +89,13 @@ pub trait NftModule:
             token_id: mint_price_token_id,
             amount: mint_price_amount,
         };
-        self.brand_info(&brand_id).set(&brand_info);
-        self.price_for_brand(&brand_id).set(&price_for_brand);
-        self.available_ids(&brand_id).set_initial_len(max_nfts);
-
-        if !tags.is_empty() {
-            self.tags_for_brand(&brand_id).set(&tags.to_vec());
-        }
+        self.temporary_callback_storage(&brand_id)
+            .set(&TempCallbackStorageInfo {
+                brand_info,
+                price_for_brand,
+                max_nfts,
+                tags: tags.to_vec(),
+            });
 
         self.nft_token(&brand_id).issue(
             EsdtTokenType::NonFungible,
@@ -95,28 +103,40 @@ pub trait NftModule:
             token_display_name,
             token_ticker,
             0,
-            Some(self.callbacks().issue_callback(brand_id)),
+            Some(self.callbacks().issue_callback(collection_id, brand_id)),
         );
     }
 
     #[callback]
     fn issue_callback(
         &self,
+        collection_id: CollectionId<Self::Api>,
         brand_id: BrandId<Self::Api>,
         #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>,
     ) {
         match result {
             ManagedAsyncCallResult::Ok(token_id) => {
+                let cb_info: TempCallbackStorageInfo<Self::Api> =
+                    self.temporary_callback_storage(&brand_id).get();
+
                 self.nft_token(&brand_id).set_token_id(&token_id);
+                self.brand_info(&brand_id).set(&cb_info.brand_info);
+                self.price_for_brand(&brand_id)
+                    .set(&cb_info.price_for_brand);
+                self.available_ids(&brand_id)
+                    .set_initial_len(cb_info.max_nfts);
+
+                if !cb_info.tags.is_empty() {
+                    self.tags_for_brand(&brand_id).set(&cb_info.tags);
+                }
             }
             ManagedAsyncCallResult::Err(_) => {
-                self.brand_info(&brand_id).clear();
-                self.price_for_brand(&brand_id).clear();
-                self.tags_for_brand(&brand_id).clear();
-                self.available_ids(&brand_id).clear_len();
                 let _ = self.registered_brands().swap_remove(&brand_id);
+                let _ = self.registered_collections().swap_remove(&collection_id);
             }
         }
+
+        self.temporary_callback_storage(&brand_id).clear();
     }
 
     #[endpoint(setLocalRoles)]
@@ -265,4 +285,10 @@ pub trait NftModule:
 
     #[storage_mapper("availableIds")]
     fn available_ids(&self, brand_id: &BrandId<Self::Api>) -> UniqueIdMapper<Self::Api>;
+
+    #[storage_mapper("temporaryCallbackStorage")]
+    fn temporary_callback_storage(
+        &self,
+        brand_id: &BrandId<Self::Api>,
+    ) -> SingleValueMapper<TempCallbackStorageInfo<Self::Api>>;
 }
