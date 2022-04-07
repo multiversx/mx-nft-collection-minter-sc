@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::{
-    common_storage::{BrandId, BrandInfo, CollectionId, Tag},
+    common_storage::{BrandId, BrandInfo, CollectionId, MintPrice, Tag},
     unique_id_mapper::{UniqueId, UniqueIdMapper},
 };
 
@@ -75,11 +75,14 @@ pub trait NftModule:
             token_display_name: token_display_name.clone(),
             media_type,
             royalties,
-            mint_start_timestamp,
-            mint_price_token_id,
-            mint_price_amount,
+        };
+        let price_for_brand = MintPrice {
+            start_timestamp: mint_start_timestamp,
+            token_id: mint_price_token_id,
+            amount: mint_price_amount,
         };
         self.brand_info(&brand_id).set(&brand_info);
+        self.price_for_brand(&brand_id).set(&price_for_brand);
         self.available_ids(&brand_id).set_initial_len(max_nfts);
 
         if !tags.is_empty() {
@@ -108,6 +111,7 @@ pub trait NftModule:
             }
             ManagedAsyncCallResult::Err(_) => {
                 self.brand_info(&brand_id).clear();
+                self.price_for_brand(&brand_id).clear();
                 self.tags_for_brand(&brand_id).clear();
                 self.available_ids(&brand_id).clear_len();
                 let _ = self.registered_brands().swap_remove(&brand_id);
@@ -144,24 +148,25 @@ pub trait NftModule:
             OptionalValue::None => NFT_AMOUNT as usize,
         };
 
-        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
+        let price_for_brand: MintPrice<Self::Api> = self.price_for_brand(&brand_id).get();
         let payment: EsdtTokenPayment<Self::Api> = self.call_value().payment();
-        let total_required_amount = &brand_info.mint_price_amount * (nfts_to_buy as u32);
+        let total_required_amount = &price_for_brand.amount * (nfts_to_buy as u32);
         require!(
-            payment.token_identifier == brand_info.mint_price_token_id
+            payment.token_identifier == price_for_brand.token_id
                 && payment.amount == total_required_amount,
             "Invalid payment"
         );
 
         let current_timestamp = self.blockchain().get_block_timestamp();
         require!(
-            current_timestamp >= brand_info.mint_start_timestamp,
+            current_timestamp >= price_for_brand.start_timestamp,
             "May not mint yet"
         );
 
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
+        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
         self.mint_and_send_random_nft(&caller, &brand_id, &brand_info, nfts_to_buy);
     }
 

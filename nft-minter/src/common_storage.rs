@@ -16,9 +16,13 @@ pub struct BrandInfo<M: ManagedTypeApi> {
     pub token_display_name: ManagedBuffer<M>,
     pub media_type: MediaType<M>,
     pub royalties: BigUint<M>,
-    pub mint_start_timestamp: u64,
-    pub mint_price_token_id: TokenIdentifier<M>,
-    pub mint_price_amount: BigUint<M>,
+}
+
+#[derive(TypeAbi, TopEncode, TopDecode)]
+pub struct MintPrice<M: ManagedTypeApi> {
+    pub start_timestamp: u64,
+    pub token_id: TokenIdentifier<M>,
+    pub amount: BigUint<M>,
 }
 
 #[elrond_wasm::module]
@@ -38,6 +42,13 @@ pub trait CommonStorageModule {
     #[view(getBrandInfo)]
     #[storage_mapper("brandInfo")]
     fn brand_info(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<BrandInfo<Self::Api>>;
+
+    #[view(getPriceForBrand)]
+    #[storage_mapper("priceForBrand")]
+    fn price_for_brand(
+        &self,
+        brand_id: &BrandId<Self::Api>,
+    ) -> SingleValueMapper<MintPrice<Self::Api>>;
 
     #[view(getTagsForBrand)]
     #[storage_mapper("tagsForBrand")]
