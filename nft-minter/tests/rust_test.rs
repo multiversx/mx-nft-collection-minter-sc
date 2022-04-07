@@ -2,8 +2,9 @@ pub mod constants;
 pub mod nft_minter_interactor;
 
 use constants::*;
-use elrond_wasm_debug::{managed_buffer, rust_biguint};
+use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint};
 use nft_minter::nft_module::NftModule;
+use nft_minter::royalties::RoyaltiesModule;
 use nft_minter_interactor::*;
 
 #[test]
@@ -191,6 +192,25 @@ fn buy_random_nft_test() {
             assert_eq!(mapper.get(2), 5);
         })
         .assert_ok();
+
+    // claim user payments
+    let owner_addr = nm_setup.owner_address.clone();
+    nm_setup
+        .b_mock
+        .execute_tx(&owner_addr, &nm_setup.nm_wrapper, &rust_biguint!(0), |sc| {
+            let result = sc.claim_mint_payments();
+            let (egld_amt, other_payments) = result.into_tuple();
+
+            assert_eq!(egld_amt, managed_biguint!(3 * FIRST_MINT_PRICE_AMOUNT));
+            assert!(other_payments.is_empty());
+        })
+        .assert_ok();
+
+    let owner_balance_before = OWNER_EGLD_BALANCE - 2 * ISSUE_COST;
+    let expected_balance = owner_balance_before + 3 * FIRST_MINT_PRICE_AMOUNT;
+    nm_setup
+        .b_mock
+        .check_egld_balance(&owner_addr, &rust_biguint!(expected_balance));
 }
 
 #[test]
