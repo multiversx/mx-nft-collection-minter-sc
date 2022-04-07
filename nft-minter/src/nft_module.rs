@@ -124,17 +124,33 @@ pub trait NftModule:
 
     #[payable("*")]
     #[endpoint(buyRandomNft)]
-    fn buy_random_nft(&self, brand_id: BrandId<Self::Api>) {
+    fn buy_random_nft(
+        &self,
+        brand_id: BrandId<Self::Api>,
+        #[var_args] opt_nfts_to_buy: OptionalValue<usize>,
+    ) {
         require!(
             self.registered_brands().contains(&brand_id),
             INVALID_BRAND_ID_ERR_MSG
         );
 
+        let nfts_to_buy = match opt_nfts_to_buy {
+            OptionalValue::Some(val) => {
+                if val == 0 {
+                    return;
+                }
+
+                val
+            }
+            OptionalValue::None => NFT_AMOUNT as usize,
+        };
+
         let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
         let payment: EsdtTokenPayment<Self::Api> = self.call_value().payment();
+        let total_required_amount = &brand_info.mint_price_amount * (nfts_to_buy as u32);
         require!(
             payment.token_identifier == brand_info.mint_price_token_id
-                && payment.amount == brand_info.mint_price_amount,
+                && payment.amount == total_required_amount,
             "Invalid payment"
         );
 
@@ -147,15 +163,29 @@ pub trait NftModule:
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
-        self.mint_and_send_random_nft(&caller, &brand_id, &brand_info);
+        self.mint_and_send_random_nft(&caller, &brand_id, &brand_info, nfts_to_buy);
     }
 
-    #[endpoint(giveawayNft)]
-    fn giveaway_nft(&self, to: ManagedAddress, brand_id: BrandId<Self::Api>) {
+    #[endpoint(giveawayNfts)]
+    fn giveaway_nfts(
+        &self,
+        brand_id: BrandId<Self::Api>,
+        #[var_args] dest_amount_pairs: MultiValueEncoded<MultiValue2<ManagedAddress, usize>>,
+    ) {
         self.require_caller_is_admin();
 
+        require!(
+            self.registered_brands().contains(&brand_id),
+            INVALID_BRAND_ID_ERR_MSG
+        );
+
         let brand_info = self.brand_info(&brand_id).get();
-        self.mint_and_send_random_nft(&to, &brand_id, &brand_info);
+        for pair in dest_amount_pairs {
+            let (dest_address, nfts_to_send) = pair.into_tuple();
+            if nfts_to_send > 0 {
+                self.mint_and_send_random_nft(&dest_address, &brand_id, &brand_info, nfts_to_send);
+            }
+        }
     }
 
     fn mint_and_send_random_nft(
@@ -163,32 +193,48 @@ pub trait NftModule:
         to: &ManagedAddress,
         brand_id: &BrandId<Self::Api>,
         brand_info: &BrandInfo<Self::Api>,
+        nfts_to_send: usize,
     ) {
-        let nft_id = self.get_next_random_id(brand_id, brand_info.id_offset);
-        let nft_uri = self.build_nft_main_file_uri(nft_id, &brand_info.media_type);
-        let nft_json = self.build_nft_json_file_uri(nft_id);
-        let collection_json = self.build_collection_json_file_uri();
-
-        let mut uris = ManagedVec::new();
-        uris.push(nft_uri);
-        uris.push(nft_json);
-        uris.push(collection_json);
-
-        let attributes = self.build_nft_attributes(brand_id, nft_id);
-        let nft_token_id = self.nft_token(brand_id).get_token_id();
-        let nft_amount = BigUint::from(NFT_AMOUNT);
-        let nft_nonce = self.send().esdt_nft_create(
-            &nft_token_id,
-            &nft_amount,
-            &brand_info.token_display_name,
-            &brand_info.royalties,
-            &ManagedBuffer::new(),
-            &attributes,
-            &uris,
+        let total_available_nfts = self.available_ids(brand_id).len();
+        require!(
+            nfts_to_send > total_available_nfts,
+            "Not enough NFTs available"
         );
 
-        self.send()
-            .direct(to, &nft_token_id, nft_nonce, &nft_amount, &[]);
+        let nft_token_id = self.nft_token(brand_id).get_token_id();
+        let mut nft_output_payments = ManagedVec::new();
+        for _ in 0..nfts_to_send {
+            let nft_id = self.get_next_random_id(brand_id, brand_info.id_offset);
+            let nft_uri = self.build_nft_main_file_uri(nft_id, &brand_info.media_type);
+            let nft_json = self.build_nft_json_file_uri(nft_id);
+            let collection_json = self.build_collection_json_file_uri();
+
+            let mut uris = ManagedVec::new();
+            uris.push(nft_uri);
+            uris.push(nft_json);
+            uris.push(collection_json);
+
+            let attributes = self.build_nft_attributes(brand_id, nft_id);
+
+            let nft_amount = BigUint::from(NFT_AMOUNT);
+            let nft_nonce = self.send().esdt_nft_create(
+                &nft_token_id,
+                &nft_amount,
+                &brand_info.token_display_name,
+                &brand_info.royalties,
+                &ManagedBuffer::new(),
+                &attributes,
+                &uris,
+            );
+
+            nft_output_payments.push(EsdtTokenPayment::new(
+                nft_token_id.clone(),
+                nft_nonce,
+                nft_amount,
+            ));
+        }
+
+        self.send().direct_multi(to, &nft_output_payments, &[]);
     }
 
     fn get_next_random_id(&self, brand_id: &BrandId<Self::Api>, id_offset: usize) -> UniqueId {
