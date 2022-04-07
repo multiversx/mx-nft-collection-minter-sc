@@ -223,4 +223,24 @@ where
             )
         }
     }
+
+    pub fn call_giveaway(
+        &mut self,
+        brand_id: &[u8],
+        dest_amount_pairs: Vec<(Address, usize)>,
+    ) -> TxResult {
+        self.b_mock.execute_tx(
+            &self.owner_address,
+            &self.nm_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                let mut args = MultiValueEncoded::new();
+                for (dest, amt) in dest_amount_pairs {
+                    args.push((managed_address!(&dest), amt).into());
+                }
+
+                sc.giveaway_nfts(managed_buffer!(brand_id), args);
+            },
+        )
+    }
 }
