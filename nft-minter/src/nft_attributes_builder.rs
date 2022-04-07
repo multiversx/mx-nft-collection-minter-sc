@@ -159,6 +159,8 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         let slice = &mut media_static_buffer[..media_type_len];
         let _ = media_type.load_slice(0, slice);
 
+        // clippy is wrong, using `slice` directly causes an error
+        #[allow(clippy::redundant_slicing)]
         SUPPORTED_MEDIA_TYPES.contains(&&slice[..])
     }
 
