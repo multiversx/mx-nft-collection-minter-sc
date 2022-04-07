@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::{
-    common_storage::{BrandId, BrandInfo, Tag},
+    common_storage::{BrandId, BrandInfo, CollectionId, Tag},
     unique_id_mapper::{UniqueId, UniqueIdMapper},
 };
 
@@ -25,6 +25,7 @@ pub trait NftModule:
     #[endpoint(issueTokenForBrand)]
     fn issue_token_for_brand(
         &self,
+        collection_id: CollectionId<Self::Api>,
         brand_id: BrandId<Self::Api>,
         media_type: ManagedBuffer,
         royalties: BigUint,
@@ -37,6 +38,8 @@ pub trait NftModule:
         #[var_args] tags: MultiValueEncoded<Tag<Self::Api>>,
     ) {
         self.require_caller_is_admin();
+
+        require!(!collection_id.is_empty(), "Invalid collection ID");
 
         let id_len = brand_id.len();
         require!(
@@ -61,20 +64,16 @@ pub trait NftModule:
             "Invalid price token"
         );
 
+        let is_new_collection = self.registered_collections().insert(collection_id.clone());
+        require!(is_new_collection, "Collection already exists");
+
         let is_new_brand = self.registered_brands().insert(brand_id.clone());
         require!(is_new_brand, "Brand already exists");
 
-        let id_offset = self.last_item_id().update(|last_id| {
-            let prev_last_id = *last_id;
-            *last_id += max_nfts;
-            require!(*last_id > prev_last_id, "ID overflow!");
-
-            prev_last_id
-        });
         let brand_info = BrandInfo {
+            collection_id,
             token_display_name: token_display_name.clone(),
             media_type,
-            id_offset,
             royalties,
             mint_start_timestamp,
             mint_price_token_id,
@@ -204,18 +203,21 @@ pub trait NftModule:
         let nft_token_id = self.nft_token(brand_id).get_token_id();
         let mut nft_output_payments = ManagedVec::new();
         for _ in 0..nfts_to_send {
-            let nft_id = self.get_next_random_id(brand_id, brand_info.id_offset);
-            let nft_uri = self.build_nft_main_file_uri(nft_id, &brand_info.media_type);
-            let nft_json = self.build_nft_json_file_uri(nft_id);
-            let collection_json = self.build_collection_json_file_uri();
+            let nft_id = self.get_next_random_id(brand_id);
+            let nft_uri = self.build_nft_main_file_uri(
+                &brand_info.collection_id,
+                nft_id,
+                &brand_info.media_type,
+            );
+            let nft_json = self.build_nft_json_file_uri(&brand_info.collection_id, nft_id);
+            let collection_json = self.build_collection_json_file_uri(&brand_info.collection_id);
 
             let mut uris = ManagedVec::new();
             uris.push(nft_uri);
             uris.push(nft_json);
             uris.push(collection_json);
 
-            let attributes = self.build_nft_attributes(brand_id, nft_id);
-
+            let attributes = self.build_nft_attributes(&brand_info.collection_id, brand_id, nft_id);
             let nft_amount = BigUint::from(NFT_AMOUNT);
             let nft_nonce = self.send().esdt_nft_create(
                 &nft_token_id,
@@ -237,15 +239,13 @@ pub trait NftModule:
         self.send().direct_multi(to, &nft_output_payments, &[]);
     }
 
-    fn get_next_random_id(&self, brand_id: &BrandId<Self::Api>, id_offset: usize) -> UniqueId {
+    fn get_next_random_id(&self, brand_id: &BrandId<Self::Api>) -> UniqueId {
         let mut id_mapper = self.available_ids(brand_id);
         let last_id_index = id_mapper.len();
         require!(last_id_index > 0, "No more NFTs available for brand");
 
         let rand_index = self.get_random_usize(VEC_MAPPER_FIRST_ITEM_INDEX, last_id_index + 1);
-        let rand_id = id_mapper.get_and_swap_remove(rand_index);
-
-        rand_id + id_offset
+        id_mapper.get_and_swap_remove(rand_index)
     }
 
     /// range is [min, max)

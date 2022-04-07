@@ -10,8 +10,6 @@ pub mod nft_module;
 pub mod royalties;
 pub mod unique_id_mapper;
 
-use common_storage::CollectionId;
-
 #[elrond_wasm::contract]
 pub trait NftMinter:
     common_storage::CommonStorageModule
@@ -24,13 +22,9 @@ pub trait NftMinter:
     #[init]
     fn init(
         &self,
-        parent_collection_id: CollectionId<Self::Api>,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
     ) {
-        require!(!parent_collection_id.is_empty(), "Invalid collection ID");
-
-        self.parent_collection_id().set(&parent_collection_id);
         self.royalties_claim_address().set(&royalties_claim_address);
         self.mint_payments_claim_address()
             .set(&mint_payments_claim_address);

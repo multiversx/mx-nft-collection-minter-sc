@@ -12,9 +12,9 @@ pub type GenericAttributes<M> = ManagedBuffer<M>;
 
 #[derive(TypeAbi, TopEncode, TopDecode)]
 pub struct BrandInfo<M: ManagedTypeApi> {
+    pub collection_id: CollectionId<M>,
     pub token_display_name: ManagedBuffer<M>,
     pub media_type: MediaType<M>,
-    pub id_offset: usize,
     pub royalties: BigUint<M>,
     pub mint_start_timestamp: u64,
     pub mint_price_token_id: TokenIdentifier<M>,
@@ -23,17 +23,17 @@ pub struct BrandInfo<M: ManagedTypeApi> {
 
 #[elrond_wasm::module]
 pub trait CommonStorageModule {
-    #[view(getParentCollectionId)]
-    #[storage_mapper("parentCollectionId")]
-    fn parent_collection_id(&self) -> SingleValueMapper<CollectionId<Self::Api>>;
+    #[view(getCollectionsCategory)]
+    #[storage_mapper("collectionsCategory")]
+    fn collections_category(&self) -> SingleValueMapper<ManagedBuffer>;
+
+    #[view(getRegisteredCollections)]
+    #[storage_mapper("registeredCollections")]
+    fn registered_collections(&self) -> UnorderedSetMapper<CollectionId<Self::Api>>;
 
     #[view(getRegisteredBrands)]
     #[storage_mapper("registeredBrands")]
     fn registered_brands(&self) -> UnorderedSetMapper<BrandId<Self::Api>>;
-
-    #[view(getLastItemId)]
-    #[storage_mapper("lastItemId")]
-    fn last_item_id(&self) -> SingleValueMapper<usize>;
 
     #[view(getBrandInfo)]
     #[storage_mapper("brandInfo")]
