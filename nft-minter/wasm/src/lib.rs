@@ -16,11 +16,11 @@ elrond_wasm_node::wasm_endpoints! {
         getAccumulatedMintPayments
         getAccumulatedRoyalties
         getBrandInfo
-        getLastItemId
+        getCollectionsCategory
         getMintPaymentsClaimAddress
         getNftTokenIdForBrand
-        getParentCollectionId
         getRegisteredBrands
+        getRegisteredCollections
         getRoyaltiesClaimAddress
         getTagsForBrand
         giveawayNfts
