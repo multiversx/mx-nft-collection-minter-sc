@@ -53,8 +53,8 @@ where
         self.vec_mapper.is_empty()
     }
 
+    /// if there is no stored value, it means we have to return the index as the value
     pub fn get(&self, index: usize) -> UniqueId {
-        // if there is no stored value, it means we have to return the index as the value
         let nonce: UniqueId = self.vec_mapper.get(index);
         if nonce == EMPTY_ENTRY {
             index
