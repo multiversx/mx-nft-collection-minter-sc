@@ -138,6 +138,12 @@ pub trait NftModule:
             "Invalid payment"
         );
 
+        let current_epoch = self.blockchain().get_block_epoch();
+        require!(
+            current_epoch >= brand_info.mint_start_epoch,
+            "Minting is not allowed yet"
+        );
+
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
