@@ -196,7 +196,7 @@ pub trait NftModule:
     ) {
         let total_available_nfts = self.available_ids(brand_id).len();
         require!(
-            nfts_to_send > total_available_nfts,
+            nfts_to_send <= total_available_nfts,
             "Not enough NFTs available"
         );
 
