@@ -16,7 +16,7 @@ pub struct BrandInfo<M: ManagedTypeApi> {
     pub media_type: MediaType<M>,
     pub id_offset: usize,
     pub royalties: BigUint<M>,
-    pub mint_start_epoch: u64,
+    pub mint_start_timestamp: u64,
     pub mint_price_token_id: TokenIdentifier<M>,
     pub mint_price_amount: BigUint<M>,
 }

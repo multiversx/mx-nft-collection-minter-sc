@@ -29,7 +29,7 @@ pub trait NftModule:
         media_type: ManagedBuffer,
         royalties: BigUint,
         max_nfts: usize,
-        mint_start_epoch: u64,
+        mint_start_timestamp: u64,
         mint_price_token_id: TokenIdentifier,
         mint_price_amount: BigUint,
         token_display_name: ManagedBuffer,
@@ -76,7 +76,7 @@ pub trait NftModule:
             media_type,
             id_offset,
             royalties,
-            mint_start_epoch,
+            mint_start_timestamp,
             mint_price_token_id,
             mint_price_amount,
         };
@@ -136,6 +136,12 @@ pub trait NftModule:
             payment.token_identifier == brand_info.mint_price_token_id
                 && payment.amount == brand_info.mint_price_amount,
             "Invalid payment"
+        );
+
+        let current_timestamp = self.blockchain().get_block_timestamp();
+        require!(
+            current_timestamp >= brand_info.mint_start_timestamp,
+            "May not mint yet"
         );
 
         self.add_mint_payment(payment.token_identifier, payment.amount);
