@@ -4,7 +4,6 @@ use crate::{
     common_storage::{BrandId, GenericAttributes, MediaType, Uri},
     unique_id_mapper::UniqueId,
 };
-use core::convert::TryInto;
 
 static BASE_URI: &[u8] = b"https://ipfs.io/ipfs";
 static COLLECTION_INFO_FILE_NAME: &[u8] = b"collection";
@@ -153,26 +152,17 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         const MAX_NUMBER_CHARACTERS: usize = 10;
         const ZERO_ASCII: u8 = b'0';
 
-        let mut as_ascii = [0u8; MAX_NUMBER_CHARACTERS];
-        let mut nr_chars = 0;
-
+        let mut vec = ArrayVec::<u8, MAX_NUMBER_CHARACTERS>::new();
         loop {
-            unsafe {
-                let reminder: u8 = (number % 10).try_into().unwrap_unchecked();
-                number /= 10;
-
-                as_ascii[nr_chars] = ZERO_ASCII + reminder;
-                nr_chars += 1;
-            }
+            vec.push(ZERO_ASCII + (number % 10) as u8);
+            number /= 10;
 
             if number == 0 {
                 break;
             }
         }
 
-        let slice = &mut as_ascii[..nr_chars];
-        slice.reverse();
-
-        ManagedBuffer::new_from_bytes(slice)
+        vec.reverse();
+        vec.as_slice().into()
     }
 }
