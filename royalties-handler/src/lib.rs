@@ -29,8 +29,5 @@ pub trait RoyaltiesHandler:
 
         self.nft_minter_sc_address().set(&nft_minter_sc_address);
         self.add_shareholders(shareholders);
-
-        // init first entry ID
-        self.first_entry_id().set(&1);
     }
 }

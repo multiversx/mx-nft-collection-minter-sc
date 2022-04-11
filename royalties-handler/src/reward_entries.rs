@@ -2,6 +2,8 @@ elrond_wasm::imports!();
 
 use nft_minter::common_storage::PaymentsVec;
 
+pub const FIRST_ENTRY_ID: usize = 1;
+
 #[elrond_wasm::module]
 pub trait RewardEntriesModule:
     crate::common_storage::CommonStorageModule + crate::token_balance::TokenBalanceModule
@@ -71,10 +73,6 @@ pub trait RewardEntriesModule:
     #[view(getLastRewardEntryEpoch)]
     #[storage_mapper("lastRewardEntryEpoch")]
     fn last_reward_entry_epoch(&self) -> SingleValueMapper<u64>;
-
-    #[view(getFirstEntryId)]
-    #[storage_mapper("firstEntryId")]
-    fn first_entry_id(&self) -> SingleValueMapper<usize>;
 
     #[view(getLastEntryId)]
     #[storage_mapper("lastEntryId")]
