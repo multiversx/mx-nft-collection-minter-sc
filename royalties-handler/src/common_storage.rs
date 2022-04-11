@@ -6,6 +6,7 @@ pub trait CommonStorageModule {
     #[storage_mapper("lastClaimEpoch")]
     fn last_claim_epoch(&self) -> SingleValueMapper<u64>;
 
-    #[storage_mapper("accumulatedPayments")]
-    fn accumulated_payments(&self) -> MapMapper<TokenIdentifier, BigUint>;
+    #[view(getShareholders)]
+    #[storage_mapper("shareholders")]
+    fn shareholders(&self) -> UnorderedSetMapper<ManagedAddress>;
 }
