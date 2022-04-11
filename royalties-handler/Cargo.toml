@@ -8,6 +8,9 @@ publish = false
 [lib]
 path = "src/lib.rs"
 
+[dependencies.nft-minter]
+path = "../nft-minter"
+
 [dependencies.elrond-wasm]
 version = "0.30.0"
 
