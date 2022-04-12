@@ -1,8 +1,5 @@
 use super::constants::*;
-use elrond_wasm::{
-    elrond_codec::multi_types::OptionalValue,
-    types::{Address, EsdtLocalRole, MultiValueEncoded},
-};
+use elrond_wasm::types::{Address, EsdtLocalRole, MultiValueEncoded};
 use elrond_wasm_debug::{
     managed_address, managed_biguint, managed_buffer, rust_biguint,
     testing_framework::{BlockchainStateWrapper, ContractObjWrapper},

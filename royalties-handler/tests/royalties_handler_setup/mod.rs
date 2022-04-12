@@ -1,11 +1,7 @@
-use super::constants::*;
 use crate::nft_minter_setup::NftMinterSetup;
-use elrond_wasm::{
-    elrond_codec::multi_types::OptionalValue,
-    types::{Address, EsdtLocalRole, MultiValueEncoded},
-};
+use elrond_wasm::types::{Address, MultiValueEncoded};
 use elrond_wasm_debug::{
-    managed_address, managed_biguint, managed_buffer, rust_biguint,
+    managed_address, rust_biguint,
     testing_framework::{BlockchainStateWrapper, ContractObjWrapper},
     tx_mock::TxResult,
     DebugApi,
