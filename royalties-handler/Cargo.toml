@@ -14,5 +14,13 @@ path = "../nft-minter"
 [dependencies.elrond-wasm]
 version = "0.30.0"
 
+[dev-dependencies.esdt-system-sc-mock]
+path = "../esdt-system-sc-mock"
+
 [dev-dependencies.elrond-wasm-debug]
 version = "0.30.0"
+
+[dev-dependencies]
+num-bigint = "0.4.2"
+num-traits = "0.2"
+hex = "0.4"

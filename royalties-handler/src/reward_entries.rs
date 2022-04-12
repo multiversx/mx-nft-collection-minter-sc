@@ -1,8 +1,15 @@
 elrond_wasm::imports!();
+elrond_wasm::derive_imports!();
 
 use nft_minter::common_storage::PaymentsVec;
 
 pub const FIRST_ENTRY_ID: usize = 1;
+
+#[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Debug)]
+pub struct RewardEntry<M: ManagedTypeApi> {
+    pub egld_amount: BigUint<M>,
+    pub esdt_payments: PaymentsVec<M>,
+}
 
 #[elrond_wasm::module]
 pub trait RewardEntriesModule:
@@ -31,7 +38,8 @@ pub trait RewardEntriesModule:
         let nr_shareholders = self.shareholders().len() as u32;
         require!(nr_shareholders > 0, "No shareholders");
 
-        let mut rewards_entry = PaymentsVec::new();
+        let mut egld_amount = BigUint::zero();
+        let mut esdt_payments = PaymentsVec::new();
         for token_id in self.known_tokens().iter() {
             let balance_mapper = self.balance_for_token(&token_id);
             let balance = balance_mapper.get();
@@ -45,14 +53,23 @@ pub trait RewardEntriesModule:
             let dust = balance - (&amount_per_holder * nr_shareholders);
             balance_mapper.set(&dust);
 
-            rewards_entry.push(EsdtTokenPayment::new(token_id, 0, amount_per_holder));
+            if token_id.is_egld() {
+                egld_amount = amount_per_holder;
+            } else {
+                esdt_payments.push(EsdtTokenPayment::new(token_id, 0, amount_per_holder));
+            }
         }
 
-        let entry_id = self.store_new_reward_entry(&rewards_entry);
-        self.copy_shareholders_to_claim_whitelist(entry_id);
+        if egld_amount > 0 || !esdt_payments.is_empty() {
+            let entry_id = self.store_new_reward_entry(&RewardEntry {
+                egld_amount,
+                esdt_payments,
+            });
+            self.copy_shareholders_to_claim_whitelist(entry_id);
+        }
     }
 
-    fn store_new_reward_entry(&self, entry: &PaymentsVec<Self::Api>) -> usize {
+    fn store_new_reward_entry(&self, entry: &RewardEntry<Self::Api>) -> usize {
         let new_entry_id = self.last_entry_id().update(|id| {
             *id += 1;
             *id
@@ -82,7 +99,7 @@ pub trait RewardEntriesModule:
     fn claimable_tokens_for_reward_entry(
         &self,
         entry_id: usize,
-    ) -> SingleValueMapper<PaymentsVec<Self::Api>>;
+    ) -> SingleValueMapper<RewardEntry<Self::Api>>;
 
     #[view(getClaimWhitelistForEntry)]
     #[storage_mapper("claimWhitelistForEntry")]
