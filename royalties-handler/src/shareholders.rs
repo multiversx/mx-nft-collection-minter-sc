@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-use crate::reward_entries::FIRST_ENTRY_ID;
+use crate::reward_entries::{RewardEntry, FIRST_ENTRY_ID};
 
 #[elrond_wasm::module]
 pub trait ShareholdersModule:
@@ -37,14 +37,25 @@ pub trait ShareholdersModule:
             }
 
             let rewards_entry_mapper = self.claimable_tokens_for_reward_entry(entry_id);
-            let payments = rewards_entry_mapper.get();
+            if rewards_entry_mapper.is_empty() {
+                continue;
+            }
+
+            let reward_entry: RewardEntry<Self::Api> = rewards_entry_mapper.get();
 
             let _ = whitelist_mapper.swap_remove(&caller);
             if whitelist_mapper.is_empty() {
                 rewards_entry_mapper.clear();
             }
 
-            self.send().direct_multi(&caller, &payments, &[]);
+            if reward_entry.egld_amount > 0 {
+                self.send()
+                    .direct_egld(&caller, &reward_entry.egld_amount, &[]);
+            }
+            if !reward_entry.esdt_payments.is_empty() {
+                self.send()
+                    .direct_multi(&caller, &reward_entry.esdt_payments, &[]);
+            }
         }
     }
 
@@ -81,8 +92,13 @@ pub trait ShareholdersModule:
         entry_id: usize,
     ) -> MultiValueEncoded<MultiValue2<TokenIdentifier, BigUint>> {
         let mut result = MultiValueEncoded::new();
-        let payments = self.claimable_tokens_for_reward_entry(entry_id).get();
-        for p in &payments {
+        let reward_entry: RewardEntry<Self::Api> =
+            self.claimable_tokens_for_reward_entry(entry_id).get();
+
+        if reward_entry.egld_amount > 0 {
+            result.push((TokenIdentifier::egld(), reward_entry.egld_amount).into());
+        }
+        for p in &reward_entry.esdt_payments {
             result.push((p.token_identifier, p.amount).into());
         }
 
