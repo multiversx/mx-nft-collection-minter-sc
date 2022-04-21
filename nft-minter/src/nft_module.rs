@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::{
-    common_storage::{BrandId, BrandInfo, CollectionId, MintPrice, Tag},
+    common_storage::{BrandId, BrandInfo, CollectionHash, MintPrice, Tag},
     unique_id_mapper::{UniqueId, UniqueIdMapper},
 };
 
@@ -33,7 +33,7 @@ pub trait NftModule:
     #[endpoint(issueTokenForBrand)]
     fn issue_token_for_brand(
         &self,
-        collection_id: CollectionId<Self::Api>,
+        collection_hash: CollectionHash<Self::Api>,
         brand_id: BrandId<Self::Api>,
         media_type: ManagedBuffer,
         royalties: BigUint,
@@ -46,8 +46,6 @@ pub trait NftModule:
         #[var_args] tags: MultiValueEncoded<Tag<Self::Api>>,
     ) {
         self.require_caller_is_admin();
-
-        require!(!collection_id.is_empty(), "Invalid collection ID");
 
         let id_len = brand_id.len();
         require!(
@@ -72,14 +70,16 @@ pub trait NftModule:
             "Invalid price token"
         );
 
-        let is_new_collection = self.registered_collections().insert(collection_id.clone());
-        require!(is_new_collection, "Collection already exists");
+        let is_new_collection = self
+            .registered_collection_hashes()
+            .insert(collection_hash.clone());
+        require!(is_new_collection, "Collection hash already exists");
 
         let is_new_brand = self.registered_brands().insert(brand_id.clone());
         require!(is_new_brand, "Brand already exists");
 
         let brand_info = BrandInfo {
-            collection_id: collection_id.clone(),
+            collection_hash: collection_hash.clone(),
             token_display_name: token_display_name.clone(),
             media_type,
             royalties,
@@ -103,14 +103,14 @@ pub trait NftModule:
             token_display_name,
             token_ticker,
             0,
-            Some(self.callbacks().issue_callback(collection_id, brand_id)),
+            Some(self.callbacks().issue_callback(collection_hash, brand_id)),
         );
     }
 
     #[callback]
     fn issue_callback(
         &self,
-        collection_id: CollectionId<Self::Api>,
+        collection_hash: CollectionHash<Self::Api>,
         brand_id: BrandId<Self::Api>,
         #[call_result] result: ManagedAsyncCallResult<TokenIdentifier>,
     ) {
@@ -132,7 +132,9 @@ pub trait NftModule:
             }
             ManagedAsyncCallResult::Err(_) => {
                 let _ = self.registered_brands().swap_remove(&brand_id);
-                let _ = self.registered_collections().swap_remove(&collection_id);
+                let _ = self
+                    .registered_collection_hashes()
+                    .swap_remove(&collection_hash);
             }
         }
 
@@ -230,19 +232,20 @@ pub trait NftModule:
         for _ in 0..nfts_to_send {
             let nft_id = self.get_next_random_id(brand_id);
             let nft_uri = self.build_nft_main_file_uri(
-                &brand_info.collection_id,
+                &brand_info.collection_hash,
                 nft_id,
                 &brand_info.media_type,
             );
-            let nft_json = self.build_nft_json_file_uri(&brand_info.collection_id, nft_id);
-            let collection_json = self.build_collection_json_file_uri(&brand_info.collection_id);
+            let nft_json = self.build_nft_json_file_uri(&brand_info.collection_hash, nft_id);
+            let collection_json = self.build_collection_json_file_uri(&brand_info.collection_hash);
 
             let mut uris = ManagedVec::new();
             uris.push(nft_uri);
             uris.push(nft_json);
             uris.push(collection_json);
 
-            let attributes = self.build_nft_attributes(&brand_info.collection_id, brand_id, nft_id);
+            let attributes =
+                self.build_nft_attributes(&brand_info.collection_hash, brand_id, nft_id);
             let nft_amount = BigUint::from(NFT_AMOUNT);
             let nft_nonce = self.send().esdt_nft_create(
                 &nft_token_id,

@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 
 use crate::{
-    common_storage::{BrandId, CollectionId, GenericAttributes, MediaType, Uri},
+    common_storage::{BrandId, CollectionHash, GenericAttributes, MediaType, Uri},
     unique_id_mapper::UniqueId,
 };
 
@@ -37,11 +37,11 @@ const MAX_MEDIA_TYPE_LEN: usize = 9;
 pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule {
     fn build_nft_attributes(
         &self,
-        collection_id: &CollectionId<Self::Api>,
+        collection_hash: &CollectionHash<Self::Api>,
         brand_id: &BrandId<Self::Api>,
         nft_id: UniqueId,
     ) -> GenericAttributes<Self::Api> {
-        let mut attributes = self.build_attributes_metadata_part(collection_id, nft_id);
+        let mut attributes = self.build_attributes_metadata_part(collection_hash, nft_id);
         let tags_attributes = self.build_attributes_tags_part(brand_id);
         if !tags_attributes.is_empty() {
             attributes.append_bytes(ATTRIBUTES_SEPARATOR);
@@ -53,13 +53,13 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
 
     fn build_attributes_metadata_part(
         &self,
-        collection_id: &CollectionId<Self::Api>,
+        collection_hash: &CollectionHash<Self::Api>,
         nft_id: UniqueId,
     ) -> GenericAttributes<Self::Api> {
         let id_ascii = self.decimal_to_ascii(nft_id as u32);
 
         let mut metadata = GenericAttributes::new_from_bytes(METADATA_PREFIX);
-        metadata.append(collection_id);
+        metadata.append(collection_hash.as_managed_buffer());
         metadata.append_bytes(SLASH);
         metadata.append(&id_ascii);
         metadata.append_bytes(DOT);
@@ -93,11 +93,11 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
 
     fn build_nft_main_file_uri(
         &self,
-        collection_id: &CollectionId<Self::Api>,
+        collection_hash: &CollectionHash<Self::Api>,
         nft_id: UniqueId,
         media_type: &MediaType<Self::Api>,
     ) -> Uri<Self::Api> {
-        let mut uri = self.build_base_uri_for_id(collection_id, nft_id);
+        let mut uri = self.build_base_uri_for_id(collection_hash, nft_id);
         uri.append(media_type);
 
         uri
@@ -105,10 +105,10 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
 
     fn build_nft_json_file_uri(
         &self,
-        collection_id: &CollectionId<Self::Api>,
+        collection_hash: &CollectionHash<Self::Api>,
         nft_id: UniqueId,
     ) -> Uri<Self::Api> {
-        let mut uri = self.build_base_uri_for_id(collection_id, nft_id);
+        let mut uri = self.build_base_uri_for_id(collection_hash, nft_id);
         uri.append_bytes(JSON_FILE_EXTENSION);
 
         uri
@@ -116,9 +116,9 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
 
     fn build_collection_json_file_uri(
         &self,
-        collection_id: &CollectionId<Self::Api>,
+        collection_hash: &CollectionHash<Self::Api>,
     ) -> Uri<Self::Api> {
-        let mut uri = self.build_base_collection_uri(collection_id);
+        let mut uri = self.build_base_collection_uri(collection_hash);
         uri.append_bytes(COLLECTION_INFO_FILE_NAME);
         uri.append_bytes(DOT);
         uri.append_bytes(JSON_FILE_EXTENSION);
@@ -128,22 +128,25 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
 
     fn build_base_uri_for_id(
         &self,
-        collection_id: &CollectionId<Self::Api>,
+        collection_hash: &CollectionHash<Self::Api>,
         nft_id: UniqueId,
     ) -> Uri<Self::Api> {
         let id_ascii = self.decimal_to_ascii(nft_id as u32);
 
-        let mut uri = self.build_base_collection_uri(collection_id);
+        let mut uri = self.build_base_collection_uri(collection_hash);
         uri.append(&id_ascii);
         uri.append_bytes(DOT);
 
         uri
     }
 
-    fn build_base_collection_uri(&self, collection_id: &CollectionId<Self::Api>) -> Uri<Self::Api> {
+    fn build_base_collection_uri(
+        &self,
+        collection_hash: &CollectionHash<Self::Api>,
+    ) -> Uri<Self::Api> {
         let mut uri = Uri::new_from_bytes(BASE_URI);
         uri.append_bytes(SLASH);
-        uri.append(collection_id);
+        uri.append(collection_hash.as_managed_buffer());
         uri.append_bytes(SLASH);
 
         uri

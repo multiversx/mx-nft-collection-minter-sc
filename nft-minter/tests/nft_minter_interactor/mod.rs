@@ -9,8 +9,8 @@ use elrond_wasm_debug::{
     tx_mock::TxResult,
     DebugApi,
 };
-use nft_minter::nft_module::NftModule;
 use nft_minter::NftMinter;
+use nft_minter::{common_storage::COLLECTION_HASH_LEN, nft_module::NftModule};
 
 // Temporary re-implementation until next elrond-wasm version is released with the fix
 #[macro_export]
@@ -78,7 +78,7 @@ where
 
     pub fn create_default_brands(&mut self) {
         self.call_create_new_brand(
-            FIRST_COLLECTION_ID,
+            FIRST_COLLECTION_HASH,
             FIRST_BRAND_ID,
             FIRST_MEDIA_TYPE,
             0,
@@ -93,7 +93,7 @@ where
         .assert_ok();
 
         self.call_create_new_brand(
-            SECOND_COLLECTION_ID,
+            SECOND_COLLECTION_HASH,
             SECOND_BRAND_ID,
             SECOND_MEDIA_TYPE,
             0,
@@ -121,7 +121,7 @@ where
 
     pub fn build_nft_attributes_first_token(&self, nft_id: usize) -> String {
         let mut attr = "metadata:".to_owned();
-        attr += &String::from_utf8(FIRST_COLLECTION_ID.to_vec()).unwrap();
+        attr += &String::from_utf8(FIRST_COLLECTION_HASH.to_vec()).unwrap();
         attr += "/";
         attr += &nft_id.to_string();
         attr += ".json;";
@@ -132,7 +132,7 @@ where
 
     pub fn build_nft_attributes_second_token(&self, nft_id: usize) -> String {
         let mut attr = "metadata:".to_owned();
-        attr += &String::from_utf8(SECOND_COLLECTION_ID.to_vec()).unwrap();
+        attr += &String::from_utf8(SECOND_COLLECTION_HASH.to_vec()).unwrap();
         attr += "/";
         attr += &nft_id.to_string();
         attr += ".json;";
@@ -148,7 +148,7 @@ where
 {
     pub fn call_create_new_brand(
         &mut self,
-        collection_id: &[u8],
+        collection_hash: &[u8; COLLECTION_HASH_LEN],
         brand_id: &[u8],
         media_type: &[u8],
         royalties: u64,
@@ -171,7 +171,7 @@ where
                 }
 
                 sc.issue_token_for_brand(
-                    managed_buffer!(collection_id),
+                    collection_hash.into(),
                     managed_buffer!(brand_id),
                     managed_buffer!(media_type),
                     managed_biguint!(royalties),
