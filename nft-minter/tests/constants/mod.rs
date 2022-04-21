@@ -1,3 +1,5 @@
+use nft_minter::common_storage::COLLECTION_HASH_LEN;
+
 pub const ESDT_SYSTEM_SC_ADDRESS_ARRAY: [u8; 32] = elrond_wasm::hex_literal::hex!(
     "000000000000000000010000000000000000000000000000000000000002ffff"
 );
@@ -7,7 +9,8 @@ pub const USER_EGLD_BALANCE: u64 = 1_000_000_000;
 pub const CATEGORY: &[u8] = b"VeryCoolNfts";
 pub const EGLD_TOKEN_ID: &[u8] = b"EGLD";
 
-pub const FIRST_COLLECTION_ID: &[u8] = b"FirstCollection";
+pub const FIRST_COLLECTION_HASH: &[u8; COLLECTION_HASH_LEN] =
+    b"FirstCollection_______________________________";
 pub const FIRST_BRAND_ID: &[u8] = b"FirstBrand";
 pub const FIRST_MEDIA_TYPE: &[u8] = b"png";
 pub const FIRST_MAX_NFTS: usize = 5;
@@ -19,7 +22,8 @@ pub const FIRST_TOKEN_TICKER: &[u8] = b"FIRST";
 pub const FIRST_TOKEN_ID: &[u8] = b"FIRST-000000";
 pub const FIRST_TAGS: &[&[u8]] = &[b"funny", b"sad", b"memes"];
 
-pub const SECOND_COLLECTION_ID: &[u8] = b"SecondCollection";
+pub const SECOND_COLLECTION_HASH: &[u8; COLLECTION_HASH_LEN] =
+    b"SecondCollection______________________________";
 pub const SECOND_BRAND_ID: &[u8] = b"SecondBrand";
 pub const SECOND_MEDIA_TYPE: &[u8] = b"mp3";
 pub const SECOND_MAX_NFTS: usize = 10;
@@ -31,5 +35,6 @@ pub const SECOND_TOKEN_TICKER: &[u8] = b"SECOND";
 pub const SECOND_TOKEN_ID: &[u8] = b"SECOND-111111";
 pub const SECOND_TAGS: &[&[u8]] = &[b"random", b"good", b"best"];
 
-pub const THIRD_COLLECTION_ID: &[u8] = b"ThirdCollection";
+pub const THIRD_COLLECTION_HASH: &[u8; COLLECTION_HASH_LEN] =
+    b"ThirdCollection_______________________________";
 pub const THIRD_BRAND_ID: &[u8] = b"ThirdBrand";

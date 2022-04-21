@@ -1,10 +1,12 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
+pub const COLLECTION_HASH_LEN: usize = 46;
+
 pub type PaymentsVec<M> = ManagedVec<M, EsdtTokenPayment<M>>;
 pub type EgldValuePaymentsVecPair<M> = MultiValue2<BigUint<M>, PaymentsVec<M>>;
 pub type BrandId<M> = ManagedBuffer<M>;
-pub type CollectionId<M> = ManagedBuffer<M>;
+pub type CollectionHash<M> = ManagedByteArray<M, COLLECTION_HASH_LEN>;
 pub type Tag<M> = ManagedBuffer<M>;
 pub type Uri<M> = ManagedBuffer<M>;
 pub type MediaType<M> = ManagedBuffer<M>;
@@ -12,7 +14,7 @@ pub type GenericAttributes<M> = ManagedBuffer<M>;
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
 pub struct BrandInfo<M: ManagedTypeApi> {
-    pub collection_id: CollectionId<M>,
+    pub collection_hash: CollectionHash<M>,
     pub token_display_name: ManagedBuffer<M>,
     pub media_type: MediaType<M>,
     pub royalties: BigUint<M>,
@@ -31,9 +33,9 @@ pub trait CommonStorageModule {
     #[storage_mapper("collectionsCategory")]
     fn collections_category(&self) -> SingleValueMapper<ManagedBuffer>;
 
-    #[view(getRegisteredCollections)]
-    #[storage_mapper("registeredCollections")]
-    fn registered_collections(&self) -> UnorderedSetMapper<CollectionId<Self::Api>>;
+    #[view(getRegisterdCollectionHashes)]
+    #[storage_mapper("registeredCollectionHashes")]
+    fn registered_collection_hashes(&self) -> UnorderedSetMapper<CollectionHash<Self::Api>>;
 
     #[view(getRegisteredBrands)]
     #[storage_mapper("registeredBrands")]

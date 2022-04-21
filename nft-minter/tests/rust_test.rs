@@ -20,7 +20,7 @@ fn create_brands_test() {
     // try create brand, same collection
     nm_setup
         .call_create_new_brand(
-            FIRST_COLLECTION_ID,
+            FIRST_COLLECTION_HASH,
             THIRD_BRAND_ID,
             b"png",
             0,
@@ -32,12 +32,12 @@ fn create_brands_test() {
             b"TICKER",
             &[],
         )
-        .assert_user_error("Collection already exists");
+        .assert_user_error("Collection hash already exists");
 
     // try create brand, same brand ID
     nm_setup
         .call_create_new_brand(
-            THIRD_COLLECTION_ID,
+            THIRD_COLLECTION_HASH,
             FIRST_BRAND_ID,
             b"png",
             0,
@@ -54,7 +54,7 @@ fn create_brands_test() {
     // try create brand, unsupported media type
     nm_setup
         .call_create_new_brand(
-            THIRD_COLLECTION_ID,
+            THIRD_COLLECTION_HASH,
             THIRD_BRAND_ID,
             b"exe",
             0,
