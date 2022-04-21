@@ -14,6 +14,8 @@ const VEC_MAPPER_FIRST_ITEM_INDEX: usize = 1;
 const MAX_BRAND_ID_LEN: usize = 50;
 static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
 
+pub type BrandInfoViewResultType<M> = MultiValue4<BrandInfo<M>, MintPrice<M>, usize, usize>;
+
 #[derive(TopEncode, TopDecode)]
 pub struct TempCallbackStorageInfo<M: ManagedTypeApi> {
     pub brand_info: BrandInfo<M>,
@@ -123,6 +125,7 @@ pub trait NftModule:
                 self.brand_info(&brand_id).set(&cb_info.brand_info);
                 self.price_for_brand(&brand_id)
                     .set(&cb_info.price_for_brand);
+                self.total_nfts(&brand_id).set(cb_info.max_nfts);
                 self.available_ids(&brand_id)
                     .set_initial_len(cb_info.max_nfts);
 
@@ -282,9 +285,30 @@ pub trait NftModule:
         rand_source.next_usize_in_range(min, max)
     }
 
+    #[view(getBrandInfo)]
+    fn get_brand_info_view(
+        &self,
+        brand_id: BrandId<Self::Api>,
+    ) -> BrandInfoViewResultType<Self::Api> {
+        require!(
+            self.registered_brands().contains(&brand_id),
+            INVALID_BRAND_ID_ERR_MSG
+        );
+
+        let brand_info = self.brand_info(&brand_id).get();
+        let mint_price = self.price_for_brand(&brand_id).get();
+        let available_nfts = self.available_ids(&brand_id).len();
+        let total_nfts = self.total_nfts(&brand_id).get();
+
+        (brand_info, mint_price, available_nfts, total_nfts).into()
+    }
+
     #[view(getNftTokenIdForBrand)]
     #[storage_mapper("nftTokenId")]
     fn nft_token(&self, brand_id: &BrandId<Self::Api>) -> NonFungibleTokenMapper<Self::Api>;
+
+    #[storage_mapper("totalNfts")]
+    fn total_nfts(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<usize>;
 
     #[storage_mapper("availableIds")]
     fn available_ids(&self, brand_id: &BrandId<Self::Api>) -> UniqueIdMapper<Self::Api>;

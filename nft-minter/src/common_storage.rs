@@ -41,7 +41,6 @@ pub trait CommonStorageModule {
     #[storage_mapper("registeredBrands")]
     fn registered_brands(&self) -> UnorderedSetMapper<BrandId<Self::Api>>;
 
-    #[view(getBrandInfo)]
     #[storage_mapper("brandInfo")]
     fn brand_info(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<BrandInfo<Self::Api>>;
 
