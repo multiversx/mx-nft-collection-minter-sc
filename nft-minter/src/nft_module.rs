@@ -247,7 +247,7 @@ pub trait NftModule:
             let attributes =
                 self.build_nft_attributes(&brand_info.collection_hash, brand_id, nft_id);
             let nft_amount = BigUint::from(NFT_AMOUNT);
-            let nft_nonce = self.send().esdt_nft_create(
+            let nft_nonce = self.send().esdt_nft_create_as_caller(
                 &nft_token_id,
                 &nft_amount,
                 &brand_info.token_display_name,
