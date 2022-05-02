@@ -14,7 +14,10 @@ const VEC_MAPPER_FIRST_ITEM_INDEX: usize = 1;
 const MAX_BRAND_ID_LEN: usize = 50;
 static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
 
+pub type BrandInfoTupleResult<M> = (BrandInfo<M>, MintPrice<M>, usize, usize);
 pub type BrandInfoViewResultType<M> = MultiValue4<BrandInfo<M>, MintPrice<M>, usize, usize>;
+pub type AllBrandsInfoViewResultType<M> =
+    MultiValue5<BrandId<M>, BrandInfo<M>, MintPrice<M>, usize, usize>;
 
 #[derive(TopEncode, TopDecode)]
 pub struct TempCallbackStorageInfo<M: ManagedTypeApi> {
@@ -295,12 +298,34 @@ pub trait NftModule:
             INVALID_BRAND_ID_ERR_MSG
         );
 
-        let brand_info = self.brand_info(&brand_id).get();
-        let mint_price = self.price_for_brand(&brand_id).get();
-        let available_nfts = self.available_ids(&brand_id).len();
-        let total_nfts = self.total_nfts(&brand_id).get();
+        self.get_brand_info_tuple(&brand_id).into()
+    }
 
-        (brand_info, mint_price, available_nfts, total_nfts).into()
+    fn get_brand_info_tuple(
+        &self,
+        brand_id: &BrandId<Self::Api>,
+    ) -> BrandInfoTupleResult<Self::Api> {
+        let brand_info = self.brand_info(brand_id).get();
+        let mint_price = self.price_for_brand(brand_id).get();
+        let available_nfts = self.available_ids(brand_id).len();
+        let total_nfts = self.total_nfts(brand_id).get();
+
+        (brand_info, mint_price, available_nfts, total_nfts)
+    }
+
+    #[view(getAllBrandsInfo)]
+    fn get_all_brands_info(&self) -> MultiValueEncoded<AllBrandsInfoViewResultType<Self::Api>> {
+        let mut result = MultiValueEncoded::new();
+        for brand_id in self.registered_brands().iter() {
+            let info_tuple = self.get_brand_info_tuple(&brand_id);
+            let (brand_info, mint_price, available_nfts, total_nfts) = info_tuple;
+
+            let brand_info_entry =
+                (brand_id, brand_info, mint_price, available_nfts, total_nfts).into();
+            result.push(brand_info_entry);
+        }
+
+        result
     }
 
     #[view(getNftTokenIdForBrand)]

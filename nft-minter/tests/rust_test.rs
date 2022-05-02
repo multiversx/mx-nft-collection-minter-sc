@@ -2,7 +2,9 @@ pub mod constants;
 pub mod nft_minter_interactor;
 
 use constants::*;
-use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint};
+use elrond_wasm::types::ManagedByteArray;
+use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi};
+use nft_minter::common_storage::{BrandInfo, MintPrice, COLLECTION_HASH_LEN};
 use nft_minter::nft_module::NftModule;
 use nft_minter::royalties::RoyaltiesModule;
 use nft_minter_interactor::*;
@@ -67,6 +69,38 @@ fn create_brands_test() {
             &[],
         )
         .assert_user_error("Invalid media type");
+
+    // get brand by id
+    nm_setup
+        .b_mock
+        .execute_query(&nm_setup.nm_wrapper, |sc| {
+            let result = sc.get_brand_info_view(managed_buffer!(FIRST_BRAND_ID));
+            let (brand_info, mint_price, available_nfts, total_nfts) = result.into_tuple();
+
+            let expected_brand_info = BrandInfo::<DebugApi> {
+                collection_hash: ManagedByteArray::<DebugApi, COLLECTION_HASH_LEN>::new_from_bytes(
+                    FIRST_COLLECTION_HASH,
+                ),
+                token_display_name: managed_buffer!(FIRST_TOKEN_DISPLAY_NAME),
+                media_type: managed_buffer!(FIRST_MEDIA_TYPE),
+                royalties: managed_biguint!(0),
+            };
+            assert_eq!(brand_info, expected_brand_info);
+
+            let expected_mint_price = MintPrice::<DebugApi> {
+                start_timestamp: FIRST_MINT_START_TIMESTAMP,
+                token_id: managed_token_id!(FIRST_MINT_PRICE_TOKEN_ID),
+                amount: managed_biguint!(FIRST_MINT_PRICE_AMOUNT),
+            };
+            assert_eq!(mint_price, expected_mint_price);
+
+            let expected_available_nfts = FIRST_MAX_NFTS;
+            assert_eq!(available_nfts, expected_available_nfts);
+
+            let expected_total_available_nfts = FIRST_MAX_NFTS;
+            assert_eq!(total_nfts, expected_total_available_nfts);
+        })
+        .assert_ok();
 }
 
 #[test]
