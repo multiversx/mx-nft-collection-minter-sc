@@ -12,7 +12,7 @@ pub type Uri<M> = ManagedBuffer<M>;
 pub type MediaType<M> = ManagedBuffer<M>;
 pub type GenericAttributes<M> = ManagedBuffer<M>;
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct BrandInfo<M: ManagedTypeApi> {
     pub collection_hash: CollectionHash<M>,
     pub token_display_name: ManagedBuffer<M>,
@@ -20,7 +20,7 @@ pub struct BrandInfo<M: ManagedTypeApi> {
     pub royalties: BigUint<M>,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct MintPrice<M: ManagedTypeApi> {
     pub start_timestamp: u64,
     pub token_id: TokenIdentifier<M>,
