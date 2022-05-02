@@ -48,6 +48,7 @@ pub trait NftModule:
         royalties: BigUint,
         max_nfts: usize,
         mint_start_timestamp: u64,
+        mint_end_timestamp: u64,
         mint_price_token_id: TokenIdentifier,
         mint_price_amount: BigUint,
         token_display_name: ManagedBuffer,
@@ -93,11 +94,23 @@ pub trait NftModule:
             media_type,
             royalties,
         };
+        let opt_end_timestamp = if mint_end_timestamp > 0 {
+            require!(
+                mint_start_timestamp < mint_end_timestamp,
+                "Invalid timestamps"
+            );
+
+            Some(mint_end_timestamp)
+        } else {
+            None
+        };
         let price_for_brand = MintPrice {
             start_timestamp: mint_start_timestamp,
+            opt_end_timestamp,
             token_id: mint_price_token_id,
             amount: mint_price_amount,
         };
+
         self.temporary_callback_storage(&brand_id)
             .set(&TempCallbackStorageInfo {
                 brand_info,
@@ -194,6 +207,12 @@ pub trait NftModule:
             current_timestamp >= price_for_brand.start_timestamp,
             "May not mint yet"
         );
+        if let Some(end_timestamp) = price_for_brand.opt_end_timestamp {
+            require!(
+                current_timestamp < end_timestamp,
+                "May not mint after deadline"
+            );
+        }
 
         self.add_mint_payment(payment.token_identifier, payment.amount);
 

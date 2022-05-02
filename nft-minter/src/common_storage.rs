@@ -23,6 +23,7 @@ pub struct BrandInfo<M: ManagedTypeApi> {
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct MintPrice<M: ManagedTypeApi> {
     pub start_timestamp: u64,
+    pub opt_end_timestamp: Option<u64>,
     pub token_id: TokenIdentifier<M>,
     pub amount: BigUint<M>,
 }

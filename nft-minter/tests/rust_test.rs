@@ -28,6 +28,7 @@ fn create_brands_test() {
             0,
             5,
             1,
+            2,
             b"EGLD",
             1,
             b"",
@@ -45,6 +46,7 @@ fn create_brands_test() {
             0,
             5,
             1,
+            2,
             b"EGLD",
             1,
             b"",
@@ -62,6 +64,7 @@ fn create_brands_test() {
             0,
             5,
             1,
+            2,
             b"EGLD",
             1,
             b"",
@@ -91,6 +94,7 @@ fn create_brands_test() {
 
             let expected_mint_price = MintPrice::<DebugApi> {
                 start_timestamp: FIRST_MINT_START_TIMESTAMP,
+                opt_end_timestamp: Some(FIRST_MINT_END_TIMESTAMP),
                 token_id: managed_token_id!(FIRST_MINT_PRICE_TOKEN_ID),
                 amount: managed_biguint!(FIRST_MINT_PRICE_AMOUNT),
             };
@@ -247,6 +251,21 @@ fn buy_random_nft_test() {
     nm_setup
         .b_mock
         .check_egld_balance(&owner_addr, &rust_biguint!(expected_balance));
+
+    // try buy after deadline
+    nm_setup
+        .b_mock
+        .set_block_timestamp(FIRST_MINT_END_TIMESTAMP);
+
+    nm_setup
+        .call_buy_random_nft(
+            &first_user_addr,
+            FIRST_MINT_PRICE_TOKEN_ID,
+            FIRST_MINT_PRICE_AMOUNT,
+            FIRST_BRAND_ID,
+            1,
+        )
+        .assert_user_error("May not mint after deadline");
 }
 
 #[test]
