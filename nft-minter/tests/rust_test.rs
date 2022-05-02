@@ -75,7 +75,9 @@ fn create_brands_test() {
         .b_mock
         .execute_query(&nm_setup.nm_wrapper, |sc| {
             let result = sc.get_brand_info_view(managed_buffer!(FIRST_BRAND_ID));
-            let (brand_info, mint_price, available_nfts, total_nfts) = result.into_tuple();
+
+            let expected_brand_id = managed_buffer!(FIRST_BRAND_ID);
+            assert_eq!(result.brand_id, expected_brand_id);
 
             let expected_brand_info = BrandInfo::<DebugApi> {
                 collection_hash: ManagedByteArray::<DebugApi, COLLECTION_HASH_LEN>::new_from_bytes(
@@ -85,20 +87,20 @@ fn create_brands_test() {
                 media_type: managed_buffer!(FIRST_MEDIA_TYPE),
                 royalties: managed_biguint!(0),
             };
-            assert_eq!(brand_info, expected_brand_info);
+            assert_eq!(result.brand_info, expected_brand_info);
 
             let expected_mint_price = MintPrice::<DebugApi> {
                 start_timestamp: FIRST_MINT_START_TIMESTAMP,
                 token_id: managed_token_id!(FIRST_MINT_PRICE_TOKEN_ID),
                 amount: managed_biguint!(FIRST_MINT_PRICE_AMOUNT),
             };
-            assert_eq!(mint_price, expected_mint_price);
+            assert_eq!(result.mint_price, expected_mint_price);
 
             let expected_available_nfts = FIRST_MAX_NFTS;
-            assert_eq!(available_nfts, expected_available_nfts);
+            assert_eq!(result.available_nfts, expected_available_nfts);
 
             let expected_total_available_nfts = FIRST_MAX_NFTS;
-            assert_eq!(total_nfts, expected_total_available_nfts);
+            assert_eq!(result.total_nfts, expected_total_available_nfts);
         })
         .assert_ok();
 }

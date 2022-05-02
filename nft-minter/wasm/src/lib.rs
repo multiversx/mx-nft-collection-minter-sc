@@ -15,6 +15,7 @@ elrond_wasm_node::wasm_endpoints! {
         claimRoyaltiesFromMarketplace
         getAccumulatedMintPayments
         getAccumulatedRoyalties
+        getAllBrandsInfo
         getBrandInfo
         getCollectionsCategory
         getMintPaymentsClaimAddress
