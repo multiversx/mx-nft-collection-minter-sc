@@ -172,11 +172,16 @@ pub trait NftModule:
             INVALID_BRAND_ID_ERR_MSG
         );
 
+        let max_nfts_per_transaction = self.max_nfts_per_transaction().get();
         let nfts_to_buy = match opt_nfts_to_buy {
             OptionalValue::Some(val) => {
                 if val == 0 {
                     return;
                 }
+                require!(
+                    val <= max_nfts_per_transaction,
+                    "Max NFTs per transaction limit exceeded"
+                );
 
                 val
             }

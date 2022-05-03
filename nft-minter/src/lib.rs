@@ -25,10 +25,19 @@ pub trait NftMinter:
         collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
+        max_nfts_per_transaction: usize,
     ) {
         self.collections_category().set(&collections_category);
         self.royalties_claim_address().set(&royalties_claim_address);
         self.mint_payments_claim_address()
             .set(&mint_payments_claim_address);
+        self.set_max_nfts_per_transaction(max_nfts_per_transaction);
+    }
+
+    #[only_owner]
+    #[endpoint(setMaxNftsPerTransaction)]
+    fn set_max_nfts_per_transaction(&self, max: usize) {
+        require!(max > 0, "Invalid max NFTs per transaction");
+        self.max_nfts_per_transaction().set(max);
     }
 }
