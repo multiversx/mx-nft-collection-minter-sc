@@ -61,6 +61,7 @@ where
                     managed_buffer!(CATEGORY),
                     managed_address!(&owner_address),
                     managed_address!(&owner_address),
+                    1_000,
                 );
             })
             .assert_ok();
@@ -113,6 +114,7 @@ where
             0,
             FIRST_MAX_NFTS,
             FIRST_MINT_START_TIMESTAMP,
+            FIRST_MINT_END_TIMESTAMP,
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT,
             FIRST_TOKEN_DISPLAY_NAME,
@@ -128,6 +130,7 @@ where
             0,
             SECOND_MAX_NFTS,
             SECOND_MINT_START_TIMESTAMP,
+            SECOND_MINT_END_TIMESTAMP,
             SECOND_MINT_PRICE_TOKEN_ID,
             SECOND_MINT_PRICE_AMOUNT,
             SECOND_TOKEN_DISPLAY_NAME,
@@ -160,7 +163,8 @@ where
         media_type: &[u8],
         royalties: u64,
         max_nfts: usize,
-        mint_start_epoch: u64,
+        mint_start_timestamp: u64,
+        mint_end_timestamp: u64,
         mint_price_token_id: &[u8],
         mint_price_amount: u64,
         token_display_name: &[u8],
@@ -183,7 +187,8 @@ where
                     managed_buffer!(media_type),
                     managed_biguint!(royalties),
                     max_nfts,
-                    mint_start_epoch,
+                    mint_start_timestamp,
+                    mint_end_timestamp,
                     managed_token_id!(mint_price_token_id),
                     managed_biguint!(mint_price_amount),
                     managed_buffer!(token_display_name),

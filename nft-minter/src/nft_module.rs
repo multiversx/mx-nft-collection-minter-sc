@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::{
-    common_storage::{BrandId, BrandInfo, CollectionHash, MintPrice, Tag},
+    common_storage::{BrandId, BrandInfo, CollectionHash, MintPrice, Tag, TimePeriod},
     unique_id_mapper::{UniqueId, UniqueIdMapper},
 };
 
@@ -46,13 +46,14 @@ pub trait NftModule:
         brand_id: BrandId<Self::Api>,
         media_type: ManagedBuffer,
         royalties: BigUint,
-        max_nfts: usize,
+        total_nfts: usize,
         mint_start_timestamp: u64,
+        mint_end_timestamp: u64,
         mint_price_token_id: TokenIdentifier,
         mint_price_amount: BigUint,
         token_display_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
-        #[var_args] tags: MultiValueEncoded<Tag<Self::Api>>,
+        tags: MultiValueEncoded<Tag<Self::Api>>,
     ) {
         self.require_caller_is_admin();
 
@@ -73,7 +74,7 @@ pub trait NftModule:
             "Invalid media type"
         );
         require!(royalties <= ROYALTIES_MAX, "Royalties cannot be over 100%");
-        require!(max_nfts > 0, "Cannot create brand with max 0 items");
+        require!(total_nfts > 0, "Cannot create brand with 0 total NFTs");
         require!(
             mint_price_token_id.is_egld() || mint_price_token_id.is_valid_esdt_identifier(),
             "Invalid price token"
@@ -87,26 +88,35 @@ pub trait NftModule:
         let is_new_brand = self.registered_brands().insert(brand_id.clone());
         require!(is_new_brand, "Brand already exists");
 
+        require!(
+            mint_start_timestamp < mint_end_timestamp,
+            "Invalid timestamps"
+        );
+
         let brand_info = BrandInfo {
             collection_hash: collection_hash.clone(),
             token_display_name: token_display_name.clone(),
             media_type,
             royalties,
+            mint_period: TimePeriod {
+                start: mint_start_timestamp,
+                end: mint_end_timestamp,
+            },
         };
         let price_for_brand = MintPrice {
-            start_timestamp: mint_start_timestamp,
             token_id: mint_price_token_id,
             amount: mint_price_amount,
         };
+
         self.temporary_callback_storage(&brand_id)
             .set(&TempCallbackStorageInfo {
                 brand_info,
                 price_for_brand,
-                max_nfts,
+                max_nfts: total_nfts,
                 tags: tags.to_vec(),
             });
 
-        self.nft_token(&brand_id).issue(
+        self.nft_token(&brand_id).issue_and_set_all_roles(
             EsdtTokenType::NonFungible,
             payment_amount,
             token_display_name,
@@ -151,19 +161,9 @@ pub trait NftModule:
         self.temporary_callback_storage(&brand_id).clear();
     }
 
-    #[endpoint(setLocalRoles)]
-    fn set_local_roles(&self, brand_id: BrandId<Self::Api>) {
-        self.nft_token(&brand_id)
-            .set_local_roles(&[EsdtLocalRole::NftCreate], None);
-    }
-
     #[payable("*")]
     #[endpoint(buyRandomNft)]
-    fn buy_random_nft(
-        &self,
-        brand_id: BrandId<Self::Api>,
-        #[var_args] opt_nfts_to_buy: OptionalValue<usize>,
-    ) {
+    fn buy_random_nft(&self, brand_id: BrandId<Self::Api>, opt_nfts_to_buy: OptionalValue<usize>) {
         require!(
             self.registered_brands().contains(&brand_id),
             INVALID_BRAND_ID_ERR_MSG
@@ -174,6 +174,12 @@ pub trait NftModule:
                 if val == 0 {
                     return;
                 }
+
+                let max_nfts_per_transaction = self.max_nfts_per_transaction().get();
+                require!(
+                    val <= max_nfts_per_transaction,
+                    "Max NFTs per transaction limit exceeded"
+                );
 
                 val
             }
@@ -189,16 +195,20 @@ pub trait NftModule:
             "Invalid payment"
         );
 
+        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
         let current_timestamp = self.blockchain().get_block_timestamp();
         require!(
-            current_timestamp >= price_for_brand.start_timestamp,
+            current_timestamp >= brand_info.mint_period.start,
             "May not mint yet"
+        );
+        require!(
+            current_timestamp < brand_info.mint_period.end,
+            "May not mint after deadline"
         );
 
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
-        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
         self.mint_and_send_random_nft(&caller, &brand_id, &brand_info, nfts_to_buy);
     }
 
@@ -206,7 +216,7 @@ pub trait NftModule:
     fn giveaway_nfts(
         &self,
         brand_id: BrandId<Self::Api>,
-        #[var_args] dest_amount_pairs: MultiValueEncoded<MultiValue2<ManagedAddress, usize>>,
+        dest_amount_pairs: MultiValueEncoded<MultiValue2<ManagedAddress, usize>>,
     ) {
         self.require_caller_is_admin();
 

@@ -4,9 +4,10 @@ pub mod nft_minter_interactor;
 use constants::*;
 use elrond_wasm::types::ManagedByteArray;
 use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi};
-use nft_minter::common_storage::{BrandInfo, MintPrice, COLLECTION_HASH_LEN};
+use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod, COLLECTION_HASH_LEN};
 use nft_minter::nft_module::NftModule;
 use nft_minter::royalties::RoyaltiesModule;
+use nft_minter::NftMinter;
 use nft_minter_interactor::*;
 
 #[test]
@@ -28,6 +29,7 @@ fn create_brands_test() {
             0,
             5,
             1,
+            2,
             b"EGLD",
             1,
             b"",
@@ -45,6 +47,7 @@ fn create_brands_test() {
             0,
             5,
             1,
+            2,
             b"EGLD",
             1,
             b"",
@@ -62,6 +65,7 @@ fn create_brands_test() {
             0,
             5,
             1,
+            2,
             b"EGLD",
             1,
             b"",
@@ -86,11 +90,14 @@ fn create_brands_test() {
                 token_display_name: managed_buffer!(FIRST_TOKEN_DISPLAY_NAME),
                 media_type: managed_buffer!(FIRST_MEDIA_TYPE),
                 royalties: managed_biguint!(0),
+                mint_period: TimePeriod {
+                    start: FIRST_MINT_START_TIMESTAMP,
+                    end: FIRST_MINT_END_TIMESTAMP,
+                },
             };
             assert_eq!(result.brand_info, expected_brand_info);
 
             let expected_mint_price = MintPrice::<DebugApi> {
-                start_timestamp: FIRST_MINT_START_TIMESTAMP,
                 token_id: managed_token_id!(FIRST_MINT_PRICE_TOKEN_ID),
                 amount: managed_biguint!(FIRST_MINT_PRICE_AMOUNT),
             };
@@ -174,7 +181,30 @@ fn buy_random_nft_test() {
         )
         .assert_user_error("Invalid payment");
 
-    // try buy too many
+    // try buy too many - over max limit
+    nm_setup
+        .call_buy_random_nft(
+            &second_user_address,
+            FIRST_MINT_PRICE_TOKEN_ID,
+            FIRST_MINT_PRICE_AMOUNT * 5,
+            FIRST_BRAND_ID,
+            3,
+        )
+        .assert_user_error("Max NFTs per transaction limit exceeded");
+
+    nm_setup
+        .b_mock
+        .execute_tx(
+            &nm_setup.owner_address,
+            &nm_setup.nm_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                sc.set_max_nfts_per_transaction(1_000);
+            },
+        )
+        .assert_ok();
+
+    // try buy too many - not enough available
     nm_setup
         .call_buy_random_nft(
             &second_user_address,
@@ -247,6 +277,21 @@ fn buy_random_nft_test() {
     nm_setup
         .b_mock
         .check_egld_balance(&owner_addr, &rust_biguint!(expected_balance));
+
+    // try buy after deadline
+    nm_setup
+        .b_mock
+        .set_block_timestamp(FIRST_MINT_END_TIMESTAMP);
+
+    nm_setup
+        .call_buy_random_nft(
+            &first_user_addr,
+            FIRST_MINT_PRICE_TOKEN_ID,
+            FIRST_MINT_PRICE_AMOUNT,
+            FIRST_BRAND_ID,
+            1,
+        )
+        .assert_user_error("May not mint after deadline");
 }
 
 #[test]
