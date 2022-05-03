@@ -53,7 +53,7 @@ pub trait NftModule:
         mint_price_amount: BigUint,
         token_display_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
-        #[var_args] tags: MultiValueEncoded<Tag<Self::Api>>,
+        tags: MultiValueEncoded<Tag<Self::Api>>,
     ) {
         self.require_caller_is_admin();
 
@@ -119,7 +119,7 @@ pub trait NftModule:
                 tags: tags.to_vec(),
             });
 
-        self.nft_token(&brand_id).issue(
+        self.nft_token(&brand_id).issue_and_set_all_roles(
             EsdtTokenType::NonFungible,
             payment_amount,
             token_display_name,
@@ -164,19 +164,9 @@ pub trait NftModule:
         self.temporary_callback_storage(&brand_id).clear();
     }
 
-    #[endpoint(setLocalRoles)]
-    fn set_local_roles(&self, brand_id: BrandId<Self::Api>) {
-        self.nft_token(&brand_id)
-            .set_local_roles(&[EsdtLocalRole::NftCreate], None);
-    }
-
     #[payable("*")]
     #[endpoint(buyRandomNft)]
-    fn buy_random_nft(
-        &self,
-        brand_id: BrandId<Self::Api>,
-        #[var_args] opt_nfts_to_buy: OptionalValue<usize>,
-    ) {
+    fn buy_random_nft(&self, brand_id: BrandId<Self::Api>, opt_nfts_to_buy: OptionalValue<usize>) {
         require!(
             self.registered_brands().contains(&brand_id),
             INVALID_BRAND_ID_ERR_MSG
@@ -225,7 +215,7 @@ pub trait NftModule:
     fn giveaway_nfts(
         &self,
         brand_id: BrandId<Self::Api>,
-        #[var_args] dest_amount_pairs: MultiValueEncoded<MultiValue2<ManagedAddress, usize>>,
+        dest_amount_pairs: MultiValueEncoded<MultiValue2<ManagedAddress, usize>>,
     ) {
         self.require_caller_is_admin();
 
