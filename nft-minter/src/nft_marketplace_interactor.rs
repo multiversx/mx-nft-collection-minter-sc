@@ -11,7 +11,7 @@ pub mod nft_marketplace_proxy {
         fn claim_tokens(
             &self,
             claim_destination: ManagedAddress,
-            #[var_args] token_nonce_pairs: MultiValueEncoded<MultiValue2<TokenIdentifier, u64>>,
+            token_nonce_pairs: MultiValueEncoded<MultiValue2<TokenIdentifier, u64>>,
         ) -> super::EgldValuePaymentsVecPair<Self::Api>;
     }
 }
@@ -24,7 +24,7 @@ pub trait NftMarketplaceInteractorModule:
     fn claim_royalties_from_marketplace(
         &self,
         marketplace_address: ManagedAddress,
-        #[var_args] tokens: MultiValueEncoded<TokenIdentifier>,
+        tokens: MultiValueEncoded<TokenIdentifier>,
     ) {
         self.require_caller_is_admin();
 

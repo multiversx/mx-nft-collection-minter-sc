@@ -20,7 +20,7 @@ pub trait RoyaltiesHandler:
     fn init(
         &self,
         nft_minter_sc_address: ManagedAddress,
-        #[var_args] shareholders: MultiValueEncoded<ManagedAddress>,
+        shareholders: MultiValueEncoded<ManagedAddress>,
     ) {
         require!(
             self.blockchain().is_smart_contract(&nft_minter_sc_address),

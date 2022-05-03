@@ -11,7 +11,7 @@ pub trait ShareholdersModule:
 {
     #[only_owner]
     #[endpoint(addShareholders)]
-    fn add_shareholders(&self, #[var_args] shareholders: MultiValueEncoded<ManagedAddress>) {
+    fn add_shareholders(&self, shareholders: MultiValueEncoded<ManagedAddress>) {
         let mut mapper = self.shareholders();
         for sh in shareholders {
             let _ = mapper.insert(sh);
@@ -20,7 +20,7 @@ pub trait ShareholdersModule:
 
     #[only_owner]
     #[endpoint(removeShareholders)]
-    fn remove_shareholders(&self, #[var_args] shareholders: MultiValueEncoded<ManagedAddress>) {
+    fn remove_shareholders(&self, shareholders: MultiValueEncoded<ManagedAddress>) {
         let mut mapper = self.shareholders();
         for sh in shareholders {
             let _ = mapper.swap_remove(&sh);
@@ -28,7 +28,7 @@ pub trait ShareholdersModule:
     }
 
     #[endpoint(claimRewards)]
-    fn claim_rewards(&self, #[var_args] entry_ids: MultiValueEncoded<usize>) {
+    fn claim_rewards(&self, entry_ids: MultiValueEncoded<usize>) {
         let caller = self.blockchain().get_caller();
         for entry_id in entry_ids {
             let mut whitelist_mapper = self.claim_whitelist_for_entry(entry_id);

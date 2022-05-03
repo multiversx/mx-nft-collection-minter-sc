@@ -8,6 +8,7 @@ pub const OWNER_EGLD_BALANCE: u64 = 150_000_000_000_000_000;
 pub const USER_EGLD_BALANCE: u64 = 1_000_000_000;
 pub const CATEGORY: &[u8] = b"VeryCoolNfts";
 pub const EGLD_TOKEN_ID: &[u8] = b"EGLD";
+pub const MAX_NFTS_PER_TX: usize = 2;
 
 pub const FIRST_COLLECTION_HASH: &[u8; COLLECTION_HASH_LEN] =
     b"FirstCollection_______________________________";

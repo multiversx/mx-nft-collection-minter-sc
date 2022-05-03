@@ -63,6 +63,7 @@ where
                     managed_buffer!(CATEGORY),
                     managed_address!(&owner_address),
                     managed_address!(&owner_address),
+                    MAX_NFTS_PER_TX,
                 );
             })
             .assert_ok();

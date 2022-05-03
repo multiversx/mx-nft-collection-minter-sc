@@ -28,7 +28,6 @@ elrond_wasm_node::wasm_endpoints! {
         giveawayNfts
         issueTokenForBrand
         removeUserFromAdminList
-        setLocalRoles
         setMintPaymentsClaimAddress
         setRoyaltiesClaimAddress
     )
