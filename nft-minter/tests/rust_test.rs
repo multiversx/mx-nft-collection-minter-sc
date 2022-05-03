@@ -4,7 +4,7 @@ pub mod nft_minter_interactor;
 use constants::*;
 use elrond_wasm::types::ManagedByteArray;
 use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi};
-use nft_minter::common_storage::{BrandInfo, MintPrice, COLLECTION_HASH_LEN};
+use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod, COLLECTION_HASH_LEN};
 use nft_minter::nft_module::NftModule;
 use nft_minter::royalties::RoyaltiesModule;
 use nft_minter::NftMinter;
@@ -90,12 +90,14 @@ fn create_brands_test() {
                 token_display_name: managed_buffer!(FIRST_TOKEN_DISPLAY_NAME),
                 media_type: managed_buffer!(FIRST_MEDIA_TYPE),
                 royalties: managed_biguint!(0),
+                mint_period: TimePeriod {
+                    start: FIRST_MINT_START_TIMESTAMP,
+                    end: FIRST_MINT_END_TIMESTAMP,
+                },
             };
             assert_eq!(result.brand_info, expected_brand_info);
 
             let expected_mint_price = MintPrice::<DebugApi> {
-                start_timestamp: FIRST_MINT_START_TIMESTAMP,
-                opt_end_timestamp: Some(FIRST_MINT_END_TIMESTAMP),
                 token_id: managed_token_id!(FIRST_MINT_PRICE_TOKEN_ID),
                 amount: managed_biguint!(FIRST_MINT_PRICE_AMOUNT),
             };

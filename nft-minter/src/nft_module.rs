@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::{
-    common_storage::{BrandId, BrandInfo, CollectionHash, MintPrice, Tag},
+    common_storage::{BrandId, BrandInfo, CollectionHash, MintPrice, Tag, TimePeriod},
     unique_id_mapper::{UniqueId, UniqueIdMapper},
 };
 
@@ -88,25 +88,22 @@ pub trait NftModule:
         let is_new_brand = self.registered_brands().insert(brand_id.clone());
         require!(is_new_brand, "Brand already exists");
 
+        require!(
+            mint_start_timestamp < mint_end_timestamp,
+            "Invalid timestamps"
+        );
+
         let brand_info = BrandInfo {
             collection_hash: collection_hash.clone(),
             token_display_name: token_display_name.clone(),
             media_type,
             royalties,
-        };
-        let opt_end_timestamp = if mint_end_timestamp > 0 {
-            require!(
-                mint_start_timestamp < mint_end_timestamp,
-                "Invalid timestamps"
-            );
-
-            Some(mint_end_timestamp)
-        } else {
-            None
+            mint_period: TimePeriod {
+                start: mint_start_timestamp,
+                end: mint_end_timestamp,
+            },
         };
         let price_for_brand = MintPrice {
-            start_timestamp: mint_start_timestamp,
-            opt_end_timestamp,
             token_id: mint_price_token_id,
             amount: mint_price_amount,
         };
@@ -198,22 +195,20 @@ pub trait NftModule:
             "Invalid payment"
         );
 
+        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
         let current_timestamp = self.blockchain().get_block_timestamp();
         require!(
-            current_timestamp >= price_for_brand.start_timestamp,
+            current_timestamp >= brand_info.mint_period.start,
             "May not mint yet"
         );
-        if let Some(end_timestamp) = price_for_brand.opt_end_timestamp {
-            require!(
-                current_timestamp < end_timestamp,
-                "May not mint after deadline"
-            );
-        }
+        require!(
+            current_timestamp < brand_info.mint_period.end,
+            "May not mint after deadline"
+        );
 
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
-        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
         self.mint_and_send_random_nft(&caller, &brand_id, &brand_info, nfts_to_buy);
     }
 

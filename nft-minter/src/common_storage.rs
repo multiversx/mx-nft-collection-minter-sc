@@ -18,12 +18,17 @@ pub struct BrandInfo<M: ManagedTypeApi> {
     pub token_display_name: ManagedBuffer<M>,
     pub media_type: MediaType<M>,
     pub royalties: BigUint<M>,
+    pub mint_period: TimePeriod,
+}
+
+#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
+pub struct TimePeriod {
+    pub start: u64,
+    pub end: u64,
 }
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct MintPrice<M: ManagedTypeApi> {
-    pub start_timestamp: u64,
-    pub opt_end_timestamp: Option<u64>,
     pub token_id: TokenIdentifier<M>,
     pub amount: BigUint<M>,
 }
