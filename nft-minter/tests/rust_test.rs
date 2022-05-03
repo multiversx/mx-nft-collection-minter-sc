@@ -2,9 +2,10 @@ pub mod constants;
 pub mod nft_minter_interactor;
 
 use constants::*;
-use elrond_wasm::types::ManagedByteArray;
+use elrond_wasm::types::{ManagedBuffer, ManagedByteArray};
 use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi};
 use nft_minter::common_storage::{BrandInfo, MintPrice, COLLECTION_HASH_LEN};
+use nft_minter::nft_attributes_builder::NftAttributesBuilderModule;
 use nft_minter::nft_module::NftModule;
 use nft_minter::royalties::RoyaltiesModule;
 use nft_minter::NftMinter;
@@ -423,4 +424,61 @@ fn giveaway_test() {
             assert_eq!(mapper.get(4), 9);
         })
         .assert_ok();
+}
+
+#[test]
+fn formatters_test() {
+    let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
+    nm_setup.create_default_brands();
+
+    // test NFT attributes
+    nm_setup
+        .b_mock
+        .execute_query(&nm_setup.nm_wrapper, |sc| {
+            let attributes = sc.build_nft_attributes(
+                &ManagedByteArray::new_from_bytes(FIRST_COLLECTION_HASH),
+                &managed_buffer!(FIRST_BRAND_ID),
+                2,
+            );
+
+            let expected_attributes =
+                "metadata:FirstCollection_______________________________/2.json;tags:funny,sad,memes";
+            assert_eq!(managed_buffer_to_string(&attributes), expected_attributes.to_string());
+        })
+        .assert_ok();
+
+    // test generated URIs
+    nm_setup
+        .b_mock
+        .execute_query(&nm_setup.nm_wrapper, |sc| {
+            let coll_hash = ManagedByteArray::new_from_bytes(FIRST_COLLECTION_HASH);
+            let nft_main_file_uri =
+                sc.build_nft_main_file_uri(&coll_hash, 2, &managed_buffer!(b"jpg"));
+            let expected_main_file_uri =
+                "https://ipfs.io/ipfs/FirstCollection_______________________________/2.jpg";
+            assert_eq!(
+                managed_buffer_to_string(&nft_main_file_uri),
+                expected_main_file_uri.to_string()
+            );
+
+            let nft_json_file_uri = sc.build_nft_json_file_uri(&coll_hash, 2);
+            let expected_nft_json_uri =
+                "https://ipfs.io/ipfs/FirstCollection_______________________________/2.json";
+            assert_eq!(
+                managed_buffer_to_string(&nft_json_file_uri),
+                expected_nft_json_uri.to_string()
+            );
+
+            let collection_json_uri = sc.build_collection_json_file_uri(&coll_hash);
+            let expected_collection_json_uri = "https://ipfs.io/ipfs/FirstCollection_______________________________/collection.json";
+            assert_eq!(
+                managed_buffer_to_string(&collection_json_uri),
+                expected_collection_json_uri.to_string()
+            );
+        })
+        .assert_ok();
+}
+
+fn managed_buffer_to_string(buffer: &ManagedBuffer<DebugApi>) -> String {
+    String::from_utf8(buffer.to_boxed_bytes().into_vec()).unwrap()
 }

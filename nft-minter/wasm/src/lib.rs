@@ -18,6 +18,7 @@ elrond_wasm_node::wasm_endpoints! {
         getAllBrandsInfo
         getBrandInfo
         getCollectionsCategory
+        getMaxNftsPerTransaction
         getMintPaymentsClaimAddress
         getNftTokenIdForBrand
         getPriceForBrand
@@ -28,6 +29,7 @@ elrond_wasm_node::wasm_endpoints! {
         giveawayNfts
         issueTokenForBrand
         removeUserFromAdminList
+        setMaxNftsPerTransaction
         setMintPaymentsClaimAddress
         setRoyaltiesClaimAddress
     )
