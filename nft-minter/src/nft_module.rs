@@ -46,7 +46,7 @@ pub trait NftModule:
         brand_id: BrandId<Self::Api>,
         media_type: ManagedBuffer,
         royalties: BigUint,
-        max_nfts: usize,
+        total_nfts: usize,
         mint_start_timestamp: u64,
         mint_end_timestamp: u64,
         mint_price_token_id: TokenIdentifier,
@@ -74,7 +74,7 @@ pub trait NftModule:
             "Invalid media type"
         );
         require!(royalties <= ROYALTIES_MAX, "Royalties cannot be over 100%");
-        require!(max_nfts > 0, "Cannot create brand with max 0 items");
+        require!(total_nfts > 0, "Cannot create brand with 0 total NFTs");
         require!(
             mint_price_token_id.is_egld() || mint_price_token_id.is_valid_esdt_identifier(),
             "Invalid price token"
@@ -115,7 +115,7 @@ pub trait NftModule:
             .set(&TempCallbackStorageInfo {
                 brand_info,
                 price_for_brand,
-                max_nfts,
+                max_nfts: total_nfts,
                 tags: tags.to_vec(),
             });
 
@@ -177,6 +177,12 @@ pub trait NftModule:
                 if val == 0 {
                     return;
                 }
+
+                let max_nfts_per_transaction = self.max_nfts_per_transaction().get();
+                require!(
+                    val <= max_nfts_per_transaction,
+                    "Max NFTs per transaction limit exceeded"
+                );
 
                 val
             }

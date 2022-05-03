@@ -61,6 +61,7 @@ where
                     managed_buffer!(CATEGORY),
                     managed_address!(&owner_address),
                     managed_address!(&owner_address),
+                    1_000,
                 );
             })
             .assert_ok();

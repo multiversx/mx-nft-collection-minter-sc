@@ -7,6 +7,7 @@ use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi}
 use nft_minter::common_storage::{BrandInfo, MintPrice, COLLECTION_HASH_LEN};
 use nft_minter::nft_module::NftModule;
 use nft_minter::royalties::RoyaltiesModule;
+use nft_minter::NftMinter;
 use nft_minter_interactor::*;
 
 #[test]
@@ -178,7 +179,30 @@ fn buy_random_nft_test() {
         )
         .assert_user_error("Invalid payment");
 
-    // try buy too many
+    // try buy too many - over max limit
+    nm_setup
+        .call_buy_random_nft(
+            &second_user_address,
+            FIRST_MINT_PRICE_TOKEN_ID,
+            FIRST_MINT_PRICE_AMOUNT * 5,
+            FIRST_BRAND_ID,
+            3,
+        )
+        .assert_user_error("Max NFTs per transaction limit exceeded");
+
+    nm_setup
+        .b_mock
+        .execute_tx(
+            &nm_setup.owner_address,
+            &nm_setup.nm_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                sc.set_max_nfts_per_transaction(1_000);
+            },
+        )
+        .assert_ok();
+
+    // try buy too many - not enough available
     nm_setup
         .call_buy_random_nft(
             &second_user_address,
