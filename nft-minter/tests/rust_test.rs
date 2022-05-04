@@ -6,9 +6,9 @@ use elrond_wasm::types::{ManagedBuffer, ManagedByteArray};
 use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi};
 use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod};
 use nft_minter::nft_attributes_builder::{NftAttributesBuilderModule, COLLECTION_HASH_LEN};
-use nft_minter::nft_module::{NftModule, TierInfoEntry};
 use nft_minter::nft_tier::NftTierModule;
 use nft_minter::royalties::RoyaltiesModule;
+use nft_minter::views::{TierInfoEntry, ViewsModule};
 use nft_minter::NftMinter;
 use nft_minter_interactor::*;
 
