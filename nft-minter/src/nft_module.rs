@@ -23,14 +23,14 @@ pub struct BrandInfoViewResultType<M: ManagedTypeApi> {
     pub tier_info_entries: ArrayVec<TierInfoEntry<M>, MAX_TIERS_PER_BRAND>,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, Debug, PartialEq)]
 pub struct TierInfoEntry<M: ManagedTypeApi> {
     pub tier: TierName<M>,
     pub total_nfts: usize,
     pub available_nfts: usize,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
 pub struct TempCallbackTierInfo<M: ManagedTypeApi> {
     pub tier: TierName<M>,
     pub total_nfts: usize,

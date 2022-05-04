@@ -6,7 +6,8 @@ use elrond_wasm::types::{ManagedBuffer, ManagedByteArray};
 use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi};
 use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod};
 use nft_minter::nft_attributes_builder::{NftAttributesBuilderModule, COLLECTION_HASH_LEN};
-use nft_minter::nft_module::NftModule;
+use nft_minter::nft_module::{NftModule, TierInfoEntry};
+use nft_minter::nft_tier::NftTierModule;
 use nft_minter::royalties::RoyaltiesModule;
 use nft_minter::NftMinter;
 use nft_minter_interactor::*;
@@ -28,7 +29,6 @@ fn create_brands_test() {
             THIRD_BRAND_ID,
             b"png",
             0,
-            5,
             1,
             2,
             b"EGLD",
@@ -36,6 +36,8 @@ fn create_brands_test() {
             b"",
             b"TICKER",
             &[],
+            FIRST_TIERS,
+            FIRST_NFT_AMOUNTS,
         )
         .assert_user_error("Collection hash already exists");
 
@@ -46,7 +48,6 @@ fn create_brands_test() {
             FIRST_BRAND_ID,
             b"png",
             0,
-            5,
             1,
             2,
             b"EGLD",
@@ -54,6 +55,8 @@ fn create_brands_test() {
             b"",
             b"TICKER",
             &[],
+            FIRST_TIERS,
+            FIRST_NFT_AMOUNTS,
         )
         .assert_user_error("Brand already exists");
 
@@ -64,7 +67,6 @@ fn create_brands_test() {
             THIRD_BRAND_ID,
             b"exe",
             0,
-            5,
             1,
             2,
             b"EGLD",
@@ -72,6 +74,8 @@ fn create_brands_test() {
             b"",
             b"TICKER",
             &[],
+            FIRST_TIERS,
+            FIRST_NFT_AMOUNTS,
         )
         .assert_user_error("Invalid media type");
 
@@ -83,6 +87,9 @@ fn create_brands_test() {
 
             let expected_brand_id = managed_buffer!(FIRST_BRAND_ID);
             assert_eq!(result.brand_id, expected_brand_id);
+
+            let expected_token_id = managed_token_id!(FIRST_TOKEN_ID);
+            assert_eq!(result.nft_token_id, expected_token_id);
 
             let expected_brand_info = BrandInfo::<DebugApi> {
                 collection_hash: ManagedByteArray::<DebugApi, COLLECTION_HASH_LEN>::new_from_bytes(
@@ -104,11 +111,18 @@ fn create_brands_test() {
             };
             assert_eq!(result.mint_price, expected_mint_price);
 
-            let expected_available_nfts = FIRST_MAX_NFTS;
-            assert_eq!(result.available_nfts, expected_available_nfts);
-
-            let expected_total_available_nfts = FIRST_MAX_NFTS;
-            assert_eq!(result.total_nfts, expected_total_available_nfts);
+            let mut expected_tier_info = Vec::new();
+            for (tier, nft_amount) in FIRST_TIERS.iter().zip(FIRST_NFT_AMOUNTS.iter()) {
+                expected_tier_info.push(TierInfoEntry::<DebugApi> {
+                    tier: managed_buffer!(tier.clone()),
+                    available_nfts: *nft_amount,
+                    total_nfts: *nft_amount,
+                });
+            }
+            assert_eq!(
+                result.tier_info_entries.as_slice(),
+                expected_tier_info.as_slice()
+            );
         })
         .assert_ok();
 }
@@ -118,6 +132,8 @@ fn buy_random_nft_test() {
     let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
     nm_setup.create_default_brands();
 
+    let first_tier = FIRST_TIERS[0];
+
     // try buy before start
     let first_user_addr = nm_setup.first_user_address.clone();
     nm_setup
@@ -126,6 +142,7 @@ fn buy_random_nft_test() {
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT,
             FIRST_BRAND_ID,
+            first_tier,
             1,
         )
         .assert_user_error("May not mint yet");
@@ -142,6 +159,7 @@ fn buy_random_nft_test() {
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT,
             FIRST_BRAND_ID,
+            first_tier,
             1,
         )
         .assert_ok();
@@ -161,7 +179,10 @@ fn buy_random_nft_test() {
     nm_setup
         .b_mock
         .execute_query(&nm_setup.nm_wrapper, |sc| {
-            let mapper = sc.available_ids(&managed_buffer!(FIRST_BRAND_ID));
+            let mapper = sc.available_ids(
+                &managed_buffer!(FIRST_BRAND_ID),
+                &managed_buffer!(first_tier),
+            );
             assert_eq!(mapper.len(), 4);
             assert_eq!(mapper.get(1), 1);
             assert_eq!(mapper.get(2), 5);
@@ -178,6 +199,7 @@ fn buy_random_nft_test() {
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT,
             FIRST_BRAND_ID,
+            first_tier,
             2,
         )
         .assert_user_error("Invalid payment");
@@ -189,6 +211,7 @@ fn buy_random_nft_test() {
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT * 5,
             FIRST_BRAND_ID,
+            first_tier,
             3,
         )
         .assert_user_error("Max NFTs per transaction limit exceeded");
@@ -212,6 +235,7 @@ fn buy_random_nft_test() {
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT * 5,
             FIRST_BRAND_ID,
+            first_tier,
             5,
         )
         .assert_user_error("Not enough NFTs available");
@@ -223,6 +247,7 @@ fn buy_random_nft_test() {
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT * 2,
             FIRST_BRAND_ID,
+            first_tier,
             2,
         )
         .assert_ok();
@@ -253,7 +278,10 @@ fn buy_random_nft_test() {
     nm_setup
         .b_mock
         .execute_query(&nm_setup.nm_wrapper, |sc| {
-            let mapper = sc.available_ids(&managed_buffer!(FIRST_BRAND_ID));
+            let mapper = sc.available_ids(
+                &managed_buffer!(FIRST_BRAND_ID),
+                &managed_buffer!(first_tier),
+            );
             assert_eq!(mapper.len(), 2);
             assert_eq!(mapper.get(1), 4);
             assert_eq!(mapper.get(2), 5);
@@ -290,6 +318,7 @@ fn buy_random_nft_test() {
             FIRST_MINT_PRICE_TOKEN_ID,
             FIRST_MINT_PRICE_AMOUNT,
             FIRST_BRAND_ID,
+            first_tier,
             1,
         )
         .assert_user_error("May not mint after deadline");
@@ -300,10 +329,16 @@ fn giveaway_test() {
     let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
     nm_setup.create_default_brands();
 
+    let first_tier = SECOND_TIERS[0];
+
     // giveaway single nft
     let first_user_addr = nm_setup.first_user_address.clone();
     nm_setup
-        .call_giveaway(SECOND_BRAND_ID, [(first_user_addr.clone(), 1)].to_vec())
+        .call_giveaway(
+            SECOND_BRAND_ID,
+            first_tier,
+            [(first_user_addr.clone(), 1)].to_vec(),
+        )
         .assert_ok();
 
     // user received nonce 1 and ID 7
@@ -319,7 +354,10 @@ fn giveaway_test() {
     nm_setup
         .b_mock
         .execute_query(&nm_setup.nm_wrapper, |sc| {
-            let mapper = sc.available_ids(&managed_buffer!(SECOND_BRAND_ID));
+            let mapper = sc.available_ids(
+                &managed_buffer!(SECOND_BRAND_ID),
+                &managed_buffer!(first_tier),
+            );
             assert_eq!(mapper.len(), 9);
             assert_eq!(mapper.get(1), 1);
             assert_eq!(mapper.get(2), 2);
@@ -335,7 +373,11 @@ fn giveaway_test() {
 
     // giveaway two, single user
     nm_setup
-        .call_giveaway(SECOND_BRAND_ID, [(first_user_addr.clone(), 2)].to_vec())
+        .call_giveaway(
+            SECOND_BRAND_ID,
+            first_tier,
+            [(first_user_addr.clone(), 2)].to_vec(),
+        )
         .assert_ok();
 
     // received ID 4 and 5
@@ -360,7 +402,10 @@ fn giveaway_test() {
     nm_setup
         .b_mock
         .execute_query(&nm_setup.nm_wrapper, |sc| {
-            let mapper = sc.available_ids(&managed_buffer!(SECOND_BRAND_ID));
+            let mapper = sc.available_ids(
+                &managed_buffer!(SECOND_BRAND_ID),
+                &managed_buffer!(first_tier),
+            );
             assert_eq!(mapper.len(), 7);
             assert_eq!(mapper.get(1), 1);
             assert_eq!(mapper.get(2), 2);
@@ -377,6 +422,7 @@ fn giveaway_test() {
     nm_setup
         .call_giveaway(
             SECOND_BRAND_ID,
+            first_tier,
             [(first_user_addr.clone(), 2), (second_user_addr.clone(), 1)].to_vec(),
         )
         .assert_ok();
@@ -418,7 +464,10 @@ fn giveaway_test() {
     nm_setup
         .b_mock
         .execute_query(&nm_setup.nm_wrapper, |sc| {
-            let mapper = sc.available_ids(&managed_buffer!(SECOND_BRAND_ID));
+            let mapper = sc.available_ids(
+                &managed_buffer!(SECOND_BRAND_ID),
+                &managed_buffer!(first_tier),
+            );
             assert_eq!(mapper.len(), 4);
             assert_eq!(mapper.get(1), 8);
             assert_eq!(mapper.get(2), 2);

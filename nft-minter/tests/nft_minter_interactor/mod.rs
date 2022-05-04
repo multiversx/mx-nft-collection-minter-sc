@@ -83,7 +83,6 @@ where
             FIRST_BRAND_ID,
             FIRST_MEDIA_TYPE,
             0,
-            FIRST_MAX_NFTS,
             FIRST_MINT_START_TIMESTAMP,
             FIRST_MINT_END_TIMESTAMP,
             FIRST_MINT_PRICE_TOKEN_ID,
@@ -91,6 +90,8 @@ where
             FIRST_TOKEN_DISPLAY_NAME,
             FIRST_TOKEN_TICKER,
             FIRST_TAGS,
+            FIRST_TIERS,
+            FIRST_NFT_AMOUNTS,
         )
         .assert_ok();
 
@@ -99,7 +100,6 @@ where
             SECOND_BRAND_ID,
             SECOND_MEDIA_TYPE,
             0,
-            SECOND_MAX_NFTS,
             SECOND_MINT_START_TIMESTAMP,
             SECOND_MINT_END_TIMESTAMP,
             SECOND_MINT_PRICE_TOKEN_ID,
@@ -107,6 +107,8 @@ where
             SECOND_TOKEN_DISPLAY_NAME,
             SECOND_TOKEN_TICKER,
             SECOND_TAGS,
+            SECOND_TIERS,
+            SECOND_NFT_AMOUNTS,
         )
         .assert_ok();
 
@@ -155,7 +157,6 @@ where
         brand_id: &[u8],
         media_type: &[u8],
         royalties: u64,
-        max_nfts: usize,
         mint_start_timestamp: u64,
         mint_end_timestamp: u64,
         mint_price_token_id: &[u8],
@@ -209,6 +210,7 @@ where
         payment_token: &[u8],
         payment_amount: u64,
         brand_id: &[u8],
+        tier: &[u8],
         nfts_to_buy: usize,
     ) -> TxResult {
         let opt_nft_amount = if nfts_to_buy == 1 {
@@ -223,7 +225,11 @@ where
                 &self.nm_wrapper,
                 &rust_biguint!(payment_amount),
                 |sc| {
-                    sc.buy_random_nft(managed_buffer!(brand_id), opt_nft_amount);
+                    sc.buy_random_nft(
+                        managed_buffer!(brand_id),
+                        managed_buffer!(tier),
+                        opt_nft_amount,
+                    );
                 },
             )
         } else {
@@ -234,7 +240,11 @@ where
                 0,
                 &rust_biguint!(payment_amount),
                 |sc| {
-                    sc.buy_random_nft(managed_buffer!(brand_id), opt_nft_amount);
+                    sc.buy_random_nft(
+                        managed_buffer!(brand_id),
+                        managed_buffer!(tier),
+                        opt_nft_amount,
+                    );
                 },
             )
         }
@@ -243,6 +253,7 @@ where
     pub fn call_giveaway(
         &mut self,
         brand_id: &[u8],
+        tier: &[u8],
         dest_amount_pairs: Vec<(Address, usize)>,
     ) -> TxResult {
         self.b_mock.execute_tx(
@@ -255,7 +266,7 @@ where
                     args.push((managed_address!(&dest), amt).into());
                 }
 
-                sc.giveaway_nfts(managed_buffer!(brand_id), args);
+                sc.giveaway_nfts(managed_buffer!(brand_id), managed_buffer!(tier), args);
             },
         )
     }
