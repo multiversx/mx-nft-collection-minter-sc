@@ -19,7 +19,6 @@ pub struct BrandInfoViewResultType<M: ManagedTypeApi> {
     pub brand_id: BrandId<M>,
     pub nft_token_id: TokenIdentifier<M>,
     pub brand_info: BrandInfo<M>,
-    pub mint_price: MintPrice<M>,
     pub tier_info_entries: ArrayVec<TierInfoEntry<M>, MAX_TIERS_PER_BRAND>,
 }
 
@@ -28,6 +27,7 @@ pub struct TierInfoEntry<M: ManagedTypeApi> {
     pub tier: TierName<M>,
     pub total_nfts: usize,
     pub available_nfts: usize,
+    pub mint_price: MintPrice<M>,
 }
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
@@ -35,15 +35,18 @@ pub struct TempCallbackTierInfo<M: ManagedTypeApi> {
     pub tier: TierName<M>,
     pub total_nfts: usize,
     pub id_offset: usize,
+    pub mint_price: MintPrice<M>,
 }
 
 #[derive(TopEncode, TopDecode)]
 pub struct TempCallbackStorageInfo<M: ManagedTypeApi> {
     pub brand_info: BrandInfo<M>,
-    pub price_for_brand: MintPrice<M>,
     pub tags: ManagedVec<M, Tag<M>>,
     pub tier_info_entries: ArrayVec<TempCallbackTierInfo<M>, MAX_TIERS_PER_BRAND>,
 }
+
+/// Tier name, number of NFTs, price
+pub type TierArgPair<M> = MultiValue3<TierName<M>, usize, BigUint<M>>;
 
 #[elrond_wasm::module]
 pub trait NftModule:
@@ -64,11 +67,10 @@ pub trait NftModule:
         mint_start_timestamp: u64,
         mint_end_timestamp: u64,
         mint_price_token_id: TokenIdentifier,
-        mint_price_amount: BigUint,
         token_display_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
         tags: ManagedVec<Tag<Self::Api>>,
-        tier_name_nr_nfts_pairs: MultiValueEncoded<MultiValue2<TierName<Self::Api>, usize>>,
+        tier_name_nr_nfts_pairs: MultiValueEncoded<TierArgPair<Self::Api>>,
     ) {
         self.require_caller_is_admin();
 
@@ -119,7 +121,7 @@ pub trait NftModule:
         let mut tiers_info = ArrayVec::new();
         let mut current_id_offset = 0;
         for pair in tier_name_nr_nfts_pairs {
-            let (tier, nr_nfts): (TierName<Self::Api>, usize) = pair.into_tuple();
+            let (tier, nr_nfts, price): (TierName<Self::Api>, usize, BigUint) = pair.into_tuple();
 
             let is_new_tier = tier_mapper.insert(tier.clone());
             require!(is_new_tier, "Duplicate tier name");
@@ -128,6 +130,10 @@ pub trait NftModule:
                 tier,
                 total_nfts: nr_nfts,
                 id_offset: current_id_offset,
+                mint_price: MintPrice {
+                    token_id: mint_price_token_id.clone(),
+                    amount: price,
+                },
             });
             current_id_offset += nr_nfts;
         }
@@ -142,15 +148,10 @@ pub trait NftModule:
                 end: mint_end_timestamp,
             },
         };
-        let price_for_brand = MintPrice {
-            token_id: mint_price_token_id,
-            amount: mint_price_amount,
-        };
 
         self.temporary_callback_storage(&brand_id)
             .set(&TempCallbackStorageInfo {
                 brand_info,
-                price_for_brand,
                 tags,
                 tier_info_entries: tiers_info,
             });
@@ -179,8 +180,6 @@ pub trait NftModule:
 
                 self.nft_token(&brand_id).set_token_id(&token_id);
                 self.brand_info(&brand_id).set(&cb_info.brand_info);
-                self.price_for_brand(&brand_id)
-                    .set(&cb_info.price_for_brand);
 
                 for tier_info in cb_info.tier_info_entries {
                     self.available_ids(&brand_id, &tier_info.tier)
@@ -189,6 +188,9 @@ pub trait NftModule:
                         .set(tier_info.total_nfts);
                     self.nft_id_offset_for_tier(&brand_id, &tier_info.tier)
                         .set(tier_info.id_offset);
+
+                    self.price_for_tier(&brand_id, &tier_info.tier)
+                        .set(&tier_info.mint_price);
                 }
 
                 if !cb_info.tags.is_empty() {
@@ -241,11 +243,11 @@ pub trait NftModule:
             OptionalValue::None => NFT_AMOUNT as usize,
         };
 
-        let price_for_brand: MintPrice<Self::Api> = self.price_for_brand(&brand_id).get();
+        let price_for_tier: MintPrice<Self::Api> = self.price_for_tier(&brand_id, &tier).get();
         let payment: EsdtTokenPayment<Self::Api> = self.call_value().payment();
-        let total_required_amount = &price_for_brand.amount * (nfts_to_buy as u32);
+        let total_required_amount = &price_for_tier.amount * (nfts_to_buy as u32);
         require!(
-            payment.token_identifier == price_for_brand.token_id
+            payment.token_identifier == price_for_tier.token_id
                 && payment.amount == total_required_amount,
             "Invalid payment"
         );
@@ -362,16 +364,18 @@ pub trait NftModule:
 
         let nft_token_id = self.nft_token(&brand_id).get_token_id();
         let brand_info = self.brand_info(&brand_id).get();
-        let mint_price = self.price_for_brand(&brand_id).get();
 
         let mut tier_info_entries = ArrayVec::new();
         for tier in self.nft_tiers_for_brand(&brand_id).iter() {
             let total_nfts = self.total_nfts(&brand_id, &tier).get();
             let available_nfts = self.available_ids(&brand_id, &tier).len();
+            let mint_price = self.price_for_tier(&brand_id, &tier).get();
+
             tier_info_entries.push(TierInfoEntry {
                 tier,
                 total_nfts,
                 available_nfts,
+                mint_price,
             })
         }
 
@@ -379,7 +383,6 @@ pub trait NftModule:
             brand_id,
             nft_token_id,
             brand_info,
-            mint_price,
             tier_info_entries,
         }
     }

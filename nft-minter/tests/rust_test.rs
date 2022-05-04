@@ -105,18 +105,16 @@ fn create_brands_test() {
             };
             assert_eq!(result.brand_info, expected_brand_info);
 
-            let expected_mint_price = MintPrice::<DebugApi> {
-                token_id: managed_token_id!(FIRST_MINT_PRICE_TOKEN_ID),
-                amount: managed_biguint!(FIRST_MINT_PRICE_AMOUNT),
-            };
-            assert_eq!(result.mint_price, expected_mint_price);
-
             let mut expected_tier_info = Vec::new();
             for (tier, nft_amount) in FIRST_TIERS.iter().zip(FIRST_NFT_AMOUNTS.iter()) {
                 expected_tier_info.push(TierInfoEntry::<DebugApi> {
                     tier: managed_buffer!(tier.clone()),
                     available_nfts: *nft_amount,
                     total_nfts: *nft_amount,
+                    mint_price: MintPrice::<DebugApi> {
+                        token_id: managed_token_id!(FIRST_MINT_PRICE_TOKEN_ID),
+                        amount: managed_biguint!(FIRST_MINT_PRICE_AMOUNT),
+                    },
                 });
             }
             assert_eq!(

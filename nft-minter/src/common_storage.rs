@@ -1,7 +1,10 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-use crate::nft_attributes_builder::{CollectionHash, MediaType, Tag};
+use crate::{
+    nft_attributes_builder::{CollectionHash, MediaType, Tag},
+    nft_tier::TierName,
+};
 
 pub type PaymentsVec<M> = ManagedVec<M, EsdtTokenPayment<M>>;
 pub type EgldValuePaymentsVecPair<M> = MultiValue2<BigUint<M>, PaymentsVec<M>>;
@@ -49,11 +52,12 @@ pub trait CommonStorageModule {
     #[storage_mapper("brandInfo")]
     fn brand_info(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<BrandInfo<Self::Api>>;
 
-    #[view(getPriceForBrand)]
-    #[storage_mapper("priceForBrand")]
-    fn price_for_brand(
+    #[view(getPriceForTier)]
+    #[storage_mapper("priceForTier")]
+    fn price_for_tier(
         &self,
         brand_id: &BrandId<Self::Api>,
+        tier: &TierName<Self::Api>,
     ) -> SingleValueMapper<MintPrice<Self::Api>>;
 
     #[view(getTagsForBrand)]

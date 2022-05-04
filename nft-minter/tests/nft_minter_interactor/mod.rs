@@ -183,7 +183,14 @@ where
 
                 let mut tier_args = MultiValueEncoded::new();
                 for (tier, nr_nfts) in tiers.iter().zip(nr_nfts_per_tier.iter()) {
-                    tier_args.push((managed_buffer!(tier.clone()), *nr_nfts).into());
+                    tier_args.push(
+                        (
+                            managed_buffer!(tier.clone()),
+                            *nr_nfts,
+                            managed_biguint!(mint_price_amount),
+                        )
+                            .into(),
+                    );
                 }
 
                 sc.issue_token_for_brand(
@@ -194,7 +201,6 @@ where
                     mint_start_timestamp,
                     mint_end_timestamp,
                     managed_token_id!(mint_price_token_id),
-                    managed_biguint!(mint_price_amount),
                     managed_buffer!(token_display_name),
                     managed_buffer!(token_ticker),
                     managed_tags,
