@@ -126,15 +126,17 @@ pub trait NftModule:
             let is_new_tier = tier_mapper.insert(tier.clone());
             require!(is_new_tier, "Duplicate tier name");
 
-            tiers_info.push(TempCallbackTierInfo {
-                tier,
-                total_nfts: nr_nfts,
-                id_offset: current_id_offset,
-                mint_price: MintPrice {
-                    token_id: mint_price_token_id.clone(),
-                    amount: price,
-                },
-            });
+            unsafe {
+                tiers_info.push_unchecked(TempCallbackTierInfo {
+                    tier,
+                    total_nfts: nr_nfts,
+                    id_offset: current_id_offset,
+                    mint_price: MintPrice {
+                        token_id: mint_price_token_id.clone(),
+                        amount: price,
+                    },
+                });
+            }
             current_id_offset += nr_nfts;
         }
 

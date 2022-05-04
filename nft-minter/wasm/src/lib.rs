@@ -22,7 +22,7 @@ elrond_wasm_node::wasm_endpoints! {
         getMintPaymentsClaimAddress
         getNftTiersForBrand
         getNftTokenIdForBrand
-        getPriceForBrand
+        getPriceForTier
         getRegisterdCollectionHashes
         getRegisteredBrands
         getRoyaltiesClaimAddress
