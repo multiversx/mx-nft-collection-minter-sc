@@ -1,7 +1,7 @@
 use super::constants::*;
 use elrond_wasm::{
     elrond_codec::multi_types::OptionalValue,
-    types::{Address, EsdtLocalRole, MultiValueEncoded},
+    types::{Address, EsdtLocalRole, ManagedVec, MultiValueEncoded},
 };
 use elrond_wasm_debug::{
     managed_address, managed_biguint, managed_buffer, rust_biguint,
@@ -10,7 +10,7 @@ use elrond_wasm_debug::{
     DebugApi,
 };
 use nft_minter::NftMinter;
-use nft_minter::{common_storage::COLLECTION_HASH_LEN, nft_module::NftModule};
+use nft_minter::{nft_attributes_builder::COLLECTION_HASH_LEN, nft_module::NftModule};
 
 // Temporary re-implementation until next elrond-wasm version is released with the fix
 #[macro_export]
@@ -163,15 +163,26 @@ where
         token_display_name: &[u8],
         token_ticker: &[u8],
         tags: &[&[u8]],
+        tiers: &[&[u8]],
+        nr_nfts_per_tier: &[usize],
     ) -> TxResult {
         self.b_mock.execute_tx(
             &self.owner_address,
             &self.nm_wrapper,
             &rust_biguint!(ISSUE_COST),
             |sc| {
-                let mut managed_tags = MultiValueEncoded::new();
+                let mut managed_tags = ManagedVec::new();
                 for tag in tags {
                     managed_tags.push(managed_buffer!(&tag));
+                }
+
+                if tiers.len() != nr_nfts_per_tier.len() {
+                    panic!("Tier args length mismatch");
+                }
+
+                let mut tier_args = MultiValueEncoded::new();
+                for (tier, nr_nfts) in tiers.iter().zip(nr_nfts_per_tier.iter()) {
+                    tier_args.push((managed_buffer!(tier.clone()), *nr_nfts).into());
                 }
 
                 sc.issue_token_for_brand(
@@ -179,7 +190,6 @@ where
                     managed_buffer!(brand_id),
                     managed_buffer!(media_type),
                     managed_biguint!(royalties),
-                    max_nfts,
                     mint_start_timestamp,
                     mint_end_timestamp,
                     managed_token_id!(mint_price_token_id),
@@ -187,6 +197,7 @@ where
                     managed_buffer!(token_display_name),
                     managed_buffer!(token_ticker),
                     managed_tags,
+                    tier_args,
                 );
             },
         )

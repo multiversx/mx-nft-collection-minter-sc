@@ -1,16 +1,11 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-pub const COLLECTION_HASH_LEN: usize = 46;
+use crate::nft_attributes_builder::{CollectionHash, MediaType, Tag};
 
 pub type PaymentsVec<M> = ManagedVec<M, EsdtTokenPayment<M>>;
 pub type EgldValuePaymentsVecPair<M> = MultiValue2<BigUint<M>, PaymentsVec<M>>;
 pub type BrandId<M> = ManagedBuffer<M>;
-pub type CollectionHash<M> = ManagedByteArray<M, COLLECTION_HASH_LEN>;
-pub type Tag<M> = ManagedBuffer<M>;
-pub type Uri<M> = ManagedBuffer<M>;
-pub type MediaType<M> = ManagedBuffer<M>;
-pub type GenericAttributes<M> = ManagedBuffer<M>;
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct BrandInfo<M: ManagedTypeApi> {

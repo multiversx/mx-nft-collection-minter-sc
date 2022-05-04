@@ -1,4 +1,4 @@
-use nft_minter::common_storage::COLLECTION_HASH_LEN;
+use nft_minter::nft_attributes_builder::COLLECTION_HASH_LEN;
 
 pub const ESDT_SYSTEM_SC_ADDRESS_ARRAY: [u8; 32] = elrond_wasm::hex_literal::hex!(
     "000000000000000000010000000000000000000000000000000000000002ffff"
@@ -23,6 +23,7 @@ pub const FIRST_TOKEN_DISPLAY_NAME: &[u8] = b"FirstToken";
 pub const FIRST_TOKEN_TICKER: &[u8] = b"FIRST";
 pub const FIRST_TOKEN_ID: &[u8] = b"FIRST-000000";
 pub const FIRST_TAGS: &[&[u8]] = &[b"funny", b"sad", b"memes"];
+pub const FIRST_TIERS: &[&[u8]] = &[b"gold", "silver", "bronze"];
 
 pub const SECOND_COLLECTION_HASH: &[u8; COLLECTION_HASH_LEN] =
     b"SecondCollection______________________________";

@@ -2,14 +2,14 @@ elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
 use crate::{
-    common_storage::{BrandId, BrandInfo, CollectionHash, MintPrice, Tag, TimePeriod},
-    unique_id_mapper::{UniqueId, UniqueIdMapper},
+    common_storage::{BrandId, BrandInfo, MintPrice, TimePeriod},
+    nft_attributes_builder::{CollectionHash, Tag},
+    nft_tier::{TierName, MAX_TIERS_PER_BRAND},
 };
 
 const NFT_AMOUNT: u32 = 1;
 const NFT_ISSUE_COST: u64 = 50_000_000_000_000_000; // 0.05 EGLD
 const ROYALTIES_MAX: u32 = 10_000; // 100%
-const VEC_MAPPER_FIRST_ITEM_INDEX: usize = 1;
 
 const MAX_BRAND_ID_LEN: usize = 50;
 static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
@@ -17,18 +17,32 @@ static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
 #[derive(TypeAbi, TopEncode, TopDecode)]
 pub struct BrandInfoViewResultType<M: ManagedTypeApi> {
     pub brand_id: BrandId<M>,
+    pub nft_token_id: TokenIdentifier<M>,
     pub brand_info: BrandInfo<M>,
     pub mint_price: MintPrice<M>,
-    pub available_nfts: usize,
+    pub tier_info_entries: ArrayVec<TierInfoEntry<M>, MAX_TIERS_PER_BRAND>,
+}
+
+#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
+pub struct TierInfoEntry<M: ManagedTypeApi> {
+    pub tier: TierName<M>,
     pub total_nfts: usize,
+    pub available_nfts: usize,
+}
+
+#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode)]
+pub struct TempCallbackTierInfo<M: ManagedTypeApi> {
+    pub tier: TierName<M>,
+    pub total_nfts: usize,
+    pub id_offset: usize,
 }
 
 #[derive(TopEncode, TopDecode)]
 pub struct TempCallbackStorageInfo<M: ManagedTypeApi> {
     pub brand_info: BrandInfo<M>,
     pub price_for_brand: MintPrice<M>,
-    pub max_nfts: usize,
     pub tags: ManagedVec<M, Tag<M>>,
+    pub tier_info_entries: ArrayVec<TempCallbackTierInfo<M>, MAX_TIERS_PER_BRAND>,
 }
 
 #[elrond_wasm::module]
@@ -37,6 +51,7 @@ pub trait NftModule:
     + crate::admin_whitelist::AdminWhitelistModule
     + crate::nft_attributes_builder::NftAttributesBuilderModule
     + crate::royalties::RoyaltiesModule
+    + crate::nft_tier::NftTierModule
 {
     #[payable("EGLD")]
     #[endpoint(issueTokenForBrand)]
@@ -46,14 +61,14 @@ pub trait NftModule:
         brand_id: BrandId<Self::Api>,
         media_type: ManagedBuffer,
         royalties: BigUint,
-        total_nfts: usize,
         mint_start_timestamp: u64,
         mint_end_timestamp: u64,
         mint_price_token_id: TokenIdentifier,
         mint_price_amount: BigUint,
         token_display_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
-        tags: MultiValueEncoded<Tag<Self::Api>>,
+        tags: ManagedVec<Tag<Self::Api>>,
+        tier_name_nr_nfts_pairs: MultiValueEncoded<MultiValue2<TierName<Self::Api>, usize>>,
     ) {
         self.require_caller_is_admin();
 
@@ -74,7 +89,6 @@ pub trait NftModule:
             "Invalid media type"
         );
         require!(royalties <= ROYALTIES_MAX, "Royalties cannot be over 100%");
-        require!(total_nfts > 0, "Cannot create brand with 0 total NFTs");
         require!(
             mint_price_token_id.is_egld() || mint_price_token_id.is_valid_esdt_identifier(),
             "Invalid price token"
@@ -92,6 +106,31 @@ pub trait NftModule:
             mint_start_timestamp < mint_end_timestamp,
             "Invalid timestamps"
         );
+        require!(
+            !tier_name_nr_nfts_pairs.is_empty(),
+            "Must have at least one tier"
+        );
+        require!(
+            tier_name_nr_nfts_pairs.len() <= MAX_TIERS_PER_BRAND,
+            "Max tiers per brand limit exceeded"
+        );
+
+        let mut tier_mapper = self.nft_tiers_for_brand(&brand_id);
+        let mut tiers_info = ArrayVec::new();
+        let mut current_id_offset = 0;
+        for pair in tier_name_nr_nfts_pairs {
+            let (tier, nr_nfts): (TierName<Self::Api>, usize) = pair.into_tuple();
+
+            let is_new_tier = tier_mapper.insert(tier.clone());
+            require!(is_new_tier, "Duplicate tier name");
+
+            tiers_info.push(TempCallbackTierInfo {
+                tier,
+                total_nfts: nr_nfts,
+                id_offset: current_id_offset,
+            });
+            current_id_offset += nr_nfts;
+        }
 
         let brand_info = BrandInfo {
             collection_hash: collection_hash.clone(),
@@ -112,8 +151,8 @@ pub trait NftModule:
             .set(&TempCallbackStorageInfo {
                 brand_info,
                 price_for_brand,
-                max_nfts: total_nfts,
-                tags: tags.to_vec(),
+                tags,
+                tier_info_entries: tiers_info,
             });
 
         self.nft_token(&brand_id).issue_and_set_all_roles(
@@ -142,9 +181,15 @@ pub trait NftModule:
                 self.brand_info(&brand_id).set(&cb_info.brand_info);
                 self.price_for_brand(&brand_id)
                     .set(&cb_info.price_for_brand);
-                self.total_nfts(&brand_id).set(cb_info.max_nfts);
-                self.available_ids(&brand_id)
-                    .set_initial_len(cb_info.max_nfts);
+
+                for tier_info in cb_info.tier_info_entries {
+                    self.available_ids(&brand_id, &tier_info.tier)
+                        .set_initial_len(tier_info.total_nfts);
+                    self.total_nfts(&brand_id, &tier_info.tier)
+                        .set(tier_info.total_nfts);
+                    self.nft_id_offset_for_tier(&brand_id, &tier_info.tier)
+                        .set(tier_info.id_offset);
+                }
 
                 if !cb_info.tags.is_empty() {
                     self.tags_for_brand(&brand_id).set(&cb_info.tags);
@@ -155,6 +200,7 @@ pub trait NftModule:
                 let _ = self
                     .registered_collection_hashes()
                     .swap_remove(&collection_hash);
+                self.nft_tiers_for_brand(&brand_id).clear();
             }
         }
 
@@ -163,10 +209,19 @@ pub trait NftModule:
 
     #[payable("*")]
     #[endpoint(buyRandomNft)]
-    fn buy_random_nft(&self, brand_id: BrandId<Self::Api>, opt_nfts_to_buy: OptionalValue<usize>) {
+    fn buy_random_nft(
+        &self,
+        brand_id: BrandId<Self::Api>,
+        tier: TierName<Self::Api>,
+        opt_nfts_to_buy: OptionalValue<usize>,
+    ) {
         require!(
             self.registered_brands().contains(&brand_id),
             INVALID_BRAND_ID_ERR_MSG
+        );
+        require!(
+            self.nft_tiers_for_brand(&brand_id).contains(&tier),
+            "Invalid tier"
         );
 
         let nfts_to_buy = match opt_nfts_to_buy {
@@ -209,13 +264,14 @@ pub trait NftModule:
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
-        self.mint_and_send_random_nft(&caller, &brand_id, &brand_info, nfts_to_buy);
+        self.mint_and_send_random_nft(&caller, &brand_id, &tier, &brand_info, nfts_to_buy);
     }
 
     #[endpoint(giveawayNfts)]
     fn giveaway_nfts(
         &self,
         brand_id: BrandId<Self::Api>,
+        tier: TierName<Self::Api>,
         dest_amount_pairs: MultiValueEncoded<MultiValue2<ManagedAddress, usize>>,
     ) {
         self.require_caller_is_admin();
@@ -229,7 +285,13 @@ pub trait NftModule:
         for pair in dest_amount_pairs {
             let (dest_address, nfts_to_send) = pair.into_tuple();
             if nfts_to_send > 0 {
-                self.mint_and_send_random_nft(&dest_address, &brand_id, &brand_info, nfts_to_send);
+                self.mint_and_send_random_nft(
+                    &dest_address,
+                    &brand_id,
+                    &tier,
+                    &brand_info,
+                    nfts_to_send,
+                );
             }
         }
     }
@@ -238,10 +300,11 @@ pub trait NftModule:
         &self,
         to: &ManagedAddress,
         brand_id: &BrandId<Self::Api>,
+        tier: &TierName<Self::Api>,
         brand_info: &BrandInfo<Self::Api>,
         nfts_to_send: usize,
     ) {
-        let total_available_nfts = self.available_ids(brand_id).len();
+        let total_available_nfts = self.available_ids(brand_id, tier).len();
         require!(
             nfts_to_send <= total_available_nfts,
             "Not enough NFTs available"
@@ -250,7 +313,7 @@ pub trait NftModule:
         let nft_token_id = self.nft_token(brand_id).get_token_id();
         let mut nft_output_payments = ManagedVec::new();
         for _ in 0..nfts_to_send {
-            let nft_id = self.get_next_random_id(brand_id);
+            let nft_id = self.get_next_random_id(brand_id, tier);
             let nft_uri = self.build_nft_main_file_uri(
                 &brand_info.collection_hash,
                 nft_id,
@@ -287,21 +350,6 @@ pub trait NftModule:
         self.send().direct_multi(to, &nft_output_payments, &[]);
     }
 
-    fn get_next_random_id(&self, brand_id: &BrandId<Self::Api>) -> UniqueId {
-        let mut id_mapper = self.available_ids(brand_id);
-        let last_id_index = id_mapper.len();
-        require!(last_id_index > 0, "No more NFTs available for brand");
-
-        let rand_index = self.get_random_usize(VEC_MAPPER_FIRST_ITEM_INDEX, last_id_index + 1);
-        id_mapper.get_and_swap_remove(rand_index)
-    }
-
-    /// range is [min, max)
-    fn get_random_usize(&self, min: usize, max: usize) -> usize {
-        let mut rand_source = RandomnessSource::<Self::Api>::new();
-        rand_source.next_usize_in_range(min, max)
-    }
-
     #[view(getBrandInfo)]
     fn get_brand_info_view(
         &self,
@@ -312,17 +360,27 @@ pub trait NftModule:
             INVALID_BRAND_ID_ERR_MSG
         );
 
+        let nft_token_id = self.nft_token(&brand_id).get_token_id();
         let brand_info = self.brand_info(&brand_id).get();
         let mint_price = self.price_for_brand(&brand_id).get();
-        let available_nfts = self.available_ids(&brand_id).len();
-        let total_nfts = self.total_nfts(&brand_id).get();
+
+        let mut tier_info_entries = ArrayVec::new();
+        for tier in self.nft_tiers_for_brand(&brand_id).iter() {
+            let total_nfts = self.total_nfts(&brand_id, &tier).get();
+            let available_nfts = self.available_ids(&brand_id, &tier).len();
+            tier_info_entries.push(TierInfoEntry {
+                tier,
+                total_nfts,
+                available_nfts,
+            })
+        }
 
         BrandInfoViewResultType {
             brand_id,
+            nft_token_id,
             brand_info,
             mint_price,
-            available_nfts,
-            total_nfts,
+            tier_info_entries,
         }
     }
 
@@ -340,12 +398,6 @@ pub trait NftModule:
     #[view(getNftTokenIdForBrand)]
     #[storage_mapper("nftTokenId")]
     fn nft_token(&self, brand_id: &BrandId<Self::Api>) -> NonFungibleTokenMapper<Self::Api>;
-
-    #[storage_mapper("totalNfts")]
-    fn total_nfts(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<usize>;
-
-    #[storage_mapper("availableIds")]
-    fn available_ids(&self, brand_id: &BrandId<Self::Api>) -> UniqueIdMapper<Self::Api>;
 
     #[storage_mapper("temporaryCallbackStorage")]
     fn temporary_callback_storage(

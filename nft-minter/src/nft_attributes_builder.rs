@@ -1,9 +1,6 @@
 elrond_wasm::imports!();
 
-use crate::{
-    common_storage::{BrandId, CollectionHash, GenericAttributes, MediaType, Uri},
-    unique_id_mapper::UniqueId,
-};
+use crate::{common_storage::BrandId, unique_id_mapper::UniqueId};
 
 static TAGS_PREFIX: &[u8] = b"tags:";
 static TAG_SEPARATOR: &[u8] = b",";
@@ -27,6 +24,13 @@ static SUPPORTED_MEDIA_TYPES: &[&[u8]] = &[
     b"webm",
 ];
 const MAX_MEDIA_TYPE_LEN: usize = 9;
+pub const COLLECTION_HASH_LEN: usize = 46;
+
+pub type Uri<M> = ManagedBuffer<M>;
+pub type CollectionHash<M> = ManagedByteArray<M, COLLECTION_HASH_LEN>;
+pub type Tag<M> = ManagedBuffer<M>;
+pub type MediaType<M> = ManagedBuffer<M>;
+pub type GenericAttributes<M> = ManagedBuffer<M>;
 
 #[elrond_wasm::module]
 pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule {
