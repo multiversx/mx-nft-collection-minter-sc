@@ -5,6 +5,7 @@ elrond_wasm::imports!();
 pub mod admin_whitelist;
 pub mod brand_creation;
 pub mod common_storage;
+pub mod events;
 pub mod nft_attributes_builder;
 pub mod nft_marketplace_interactor;
 pub mod nft_minting;
@@ -24,6 +25,7 @@ pub trait NftMinter:
     + royalties::RoyaltiesModule
     + nft_marketplace_interactor::NftMarketplaceInteractorModule
     + views::ViewsModule
+    + events::EventsModule
 {
     #[init]
     fn init(

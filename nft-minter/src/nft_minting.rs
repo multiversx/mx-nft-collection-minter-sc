@@ -15,6 +15,7 @@ pub trait NftMintingModule:
     + crate::royalties::RoyaltiesModule
     + crate::admin_whitelist::AdminWhitelistModule
     + crate::nft_attributes_builder::NftAttributesBuilderModule
+    + crate::events::EventsModule
 {
     #[payable("*")]
     #[endpoint(buyRandomNft)]
@@ -73,7 +74,12 @@ pub trait NftMintingModule:
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
         let caller = self.blockchain().get_caller();
-        self.mint_and_send_random_nft(&caller, &brand_id, &tier, &brand_info, nfts_to_buy)
+        let output_payments =
+            self.mint_and_send_random_nft(&caller, &brand_id, &tier, &brand_info, nfts_to_buy);
+
+        self.nft_bought_event(&caller, &brand_id, &tier, nfts_to_buy);
+
+        output_payments
     }
 
     #[endpoint(giveawayNfts)]
@@ -95,6 +101,7 @@ pub trait NftMintingModule:
         );
 
         let brand_info = self.brand_info(&brand_id).get();
+        let mut total = 0;
         for pair in dest_amount_pairs {
             let (dest_address, nfts_to_send) = pair.into_tuple();
             if nfts_to_send > 0 {
@@ -105,8 +112,11 @@ pub trait NftMintingModule:
                     &brand_info,
                     nfts_to_send,
                 );
+                total += nfts_to_send;
             }
         }
+
+        self.nft_giveaway_event(&brand_id, &tier, total);
     }
 
     fn mint_and_send_random_nft(
