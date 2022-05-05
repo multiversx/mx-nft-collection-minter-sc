@@ -5,8 +5,6 @@ use crate::{common_storage::BrandId, unique_id_mapper::UniqueId};
 static TAGS_PREFIX: &[u8] = b"tags:";
 static TAG_SEPARATOR: &[u8] = b",";
 static ATTRIBUTES_SEPARATOR: &[u8] = b";";
-static SLASH: &[u8] = b"/";
-static DOT: &[u8] = b".";
 
 static SUPPORTED_MEDIA_TYPES: &[&[u8]] = &[
     b"png",
@@ -56,9 +54,8 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         nft_id: UniqueId,
     ) -> GenericAttributes<Self::Api> {
         sc_format!(
-            "metadata:{}{}{}.json",
+            "metadata:{}/{}.json",
             collection_hash.as_managed_buffer(),
-            SLASH,
             nft_id
         )
     }
@@ -93,11 +90,9 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         media_type: &MediaType<Self::Api>,
     ) -> Uri<Self::Api> {
         sc_format!(
-            "https://ipfs.io/ipfs/{}{}{}{}{}",
+            "https://ipfs.io/ipfs/{}/{}.{}",
             collection_hash.as_managed_buffer(),
-            SLASH,
             nft_id,
-            DOT,
             media_type
         )
     }
@@ -108,9 +103,8 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         nft_id: UniqueId,
     ) -> Uri<Self::Api> {
         sc_format!(
-            "https://ipfs.io/ipfs/{}{}{}.json",
+            "https://ipfs.io/ipfs/{}/{}.json",
             collection_hash.as_managed_buffer(),
-            SLASH,
             nft_id,
         )
     }

@@ -49,6 +49,10 @@ pub trait CommonStorageModule {
     #[storage_mapper("registeredBrands")]
     fn registered_brands(&self) -> UnorderedSetMapper<BrandId<Self::Api>>;
 
+    #[view(getNftTokenIdForBrand)]
+    #[storage_mapper("nftTokenId")]
+    fn nft_token(&self, brand_id: &BrandId<Self::Api>) -> NonFungibleTokenMapper<Self::Api>;
+
     #[storage_mapper("brandInfo")]
     fn brand_info(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<BrandInfo<Self::Api>>;
 

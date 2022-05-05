@@ -6,9 +6,10 @@ use elrond_wasm_debug::{
     tx_mock::TxResult,
     DebugApi,
 };
+use nft_minter::brand_creation::BrandCreationModule;
+use nft_minter::nft_attributes_builder::COLLECTION_HASH_LEN;
 use nft_minter::royalties::RoyaltiesModule;
 use nft_minter::NftMinter;
-use nft_minter::{nft_attributes_builder::COLLECTION_HASH_LEN, nft_module::NftModule};
 
 // Temporary re-implementation until next elrond-wasm version is released with the fix
 #[macro_export]
