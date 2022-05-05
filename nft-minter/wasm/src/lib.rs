@@ -20,14 +20,16 @@ elrond_wasm_node::wasm_endpoints! {
         getCollectionsCategory
         getMaxNftsPerTransaction
         getMintPaymentsClaimAddress
+        getNftTiersForBrand
         getNftTokenIdForBrand
-        getPriceForBrand
+        getPriceForTier
         getRegisterdCollectionHashes
         getRegisteredBrands
         getRoyaltiesClaimAddress
         getTagsForBrand
         giveawayNfts
         issueTokenForBrand
+        nftIdOffsetForTier
         removeUserFromAdminList
         setMaxNftsPerTransaction
         setMintPaymentsClaimAddress

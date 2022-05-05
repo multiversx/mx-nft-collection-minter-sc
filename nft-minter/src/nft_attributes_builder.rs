@@ -1,15 +1,10 @@
 elrond_wasm::imports!();
 
-use crate::{
-    common_storage::{BrandId, CollectionHash, GenericAttributes, MediaType, Uri},
-    unique_id_mapper::UniqueId,
-};
+use crate::{common_storage::BrandId, unique_id_mapper::UniqueId};
 
 static TAGS_PREFIX: &[u8] = b"tags:";
 static TAG_SEPARATOR: &[u8] = b",";
 static ATTRIBUTES_SEPARATOR: &[u8] = b";";
-static SLASH: &[u8] = b"/";
-static DOT: &[u8] = b".";
 
 static SUPPORTED_MEDIA_TYPES: &[&[u8]] = &[
     b"png",
@@ -27,6 +22,13 @@ static SUPPORTED_MEDIA_TYPES: &[&[u8]] = &[
     b"webm",
 ];
 const MAX_MEDIA_TYPE_LEN: usize = 9;
+pub const COLLECTION_HASH_LEN: usize = 46;
+
+pub type Uri<M> = ManagedBuffer<M>;
+pub type CollectionHash<M> = ManagedByteArray<M, COLLECTION_HASH_LEN>;
+pub type Tag<M> = ManagedBuffer<M>;
+pub type MediaType<M> = ManagedBuffer<M>;
+pub type GenericAttributes<M> = ManagedBuffer<M>;
 
 #[elrond_wasm::module]
 pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule {
@@ -52,9 +54,8 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         nft_id: UniqueId,
     ) -> GenericAttributes<Self::Api> {
         sc_format!(
-            "metadata:{}{}{}.json",
+            "metadata:{}/{}.json",
             collection_hash.as_managed_buffer(),
-            SLASH,
             nft_id
         )
     }
@@ -89,11 +90,9 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         media_type: &MediaType<Self::Api>,
     ) -> Uri<Self::Api> {
         sc_format!(
-            "https://ipfs.io/ipfs/{}{}{}{}{}",
+            "https://ipfs.io/ipfs/{}/{}.{}",
             collection_hash.as_managed_buffer(),
-            SLASH,
             nft_id,
-            DOT,
             media_type
         )
     }
@@ -104,9 +103,8 @@ pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule
         nft_id: UniqueId,
     ) -> Uri<Self::Api> {
         sc_format!(
-            "https://ipfs.io/ipfs/{}{}{}.json",
+            "https://ipfs.io/ipfs/{}/{}.json",
             collection_hash.as_managed_buffer(),
-            SLASH,
             nft_id,
         )
     }

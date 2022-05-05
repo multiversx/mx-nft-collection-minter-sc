@@ -1,16 +1,14 @@
 elrond_wasm::imports!();
 elrond_wasm::derive_imports!();
 
-pub const COLLECTION_HASH_LEN: usize = 46;
+use crate::{
+    nft_attributes_builder::{CollectionHash, MediaType, Tag},
+    nft_tier::TierName,
+};
 
 pub type PaymentsVec<M> = ManagedVec<M, EsdtTokenPayment<M>>;
 pub type EgldValuePaymentsVecPair<M> = MultiValue2<BigUint<M>, PaymentsVec<M>>;
 pub type BrandId<M> = ManagedBuffer<M>;
-pub type CollectionHash<M> = ManagedByteArray<M, COLLECTION_HASH_LEN>;
-pub type Tag<M> = ManagedBuffer<M>;
-pub type Uri<M> = ManagedBuffer<M>;
-pub type MediaType<M> = ManagedBuffer<M>;
-pub type GenericAttributes<M> = ManagedBuffer<M>;
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct BrandInfo<M: ManagedTypeApi> {
@@ -51,14 +49,19 @@ pub trait CommonStorageModule {
     #[storage_mapper("registeredBrands")]
     fn registered_brands(&self) -> UnorderedSetMapper<BrandId<Self::Api>>;
 
+    #[view(getNftTokenIdForBrand)]
+    #[storage_mapper("nftTokenId")]
+    fn nft_token(&self, brand_id: &BrandId<Self::Api>) -> NonFungibleTokenMapper<Self::Api>;
+
     #[storage_mapper("brandInfo")]
     fn brand_info(&self, brand_id: &BrandId<Self::Api>) -> SingleValueMapper<BrandInfo<Self::Api>>;
 
-    #[view(getPriceForBrand)]
-    #[storage_mapper("priceForBrand")]
-    fn price_for_brand(
+    #[view(getPriceForTier)]
+    #[storage_mapper("priceForTier")]
+    fn price_for_tier(
         &self,
         brand_id: &BrandId<Self::Api>,
+        tier: &TierName<Self::Api>,
     ) -> SingleValueMapper<MintPrice<Self::Api>>;
 
     #[view(getTagsForBrand)]
