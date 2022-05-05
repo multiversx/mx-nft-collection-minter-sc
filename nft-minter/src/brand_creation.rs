@@ -37,6 +37,7 @@ pub trait BrandCreationModule:
     + crate::common_storage::CommonStorageModule
     + crate::nft_attributes_builder::NftAttributesBuilderModule
     + crate::nft_tier::NftTierModule
+    + crate::events::EventsModule
 {
     #[payable("EGLD")]
     #[endpoint(issueTokenForBrand)]
@@ -180,6 +181,8 @@ pub trait BrandCreationModule:
                 if !cb_info.tags.is_empty() {
                     self.tags_for_brand(&brand_id).set(&cb_info.tags);
                 }
+
+                self.brand_created_event(&brand_id, &token_id);
             }
             ManagedAsyncCallResult::Err(_) => {
                 let _ = self.registered_brands().swap_remove(&brand_id);
