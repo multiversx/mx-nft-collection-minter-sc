@@ -3,7 +3,6 @@ elrond_wasm::imports!();
 use crate::{
     brand_creation::INVALID_BRAND_ID_ERR_MSG,
     common_storage::{BrandId, BrandInfo, MintPrice, PaymentsVec},
-    events::DestAddressAmountPair,
     nft_tier::TierName,
 };
 
@@ -101,8 +100,8 @@ pub trait NftMintingModule:
             "Invalid tier"
         );
 
-        let mut arg_pairs = ManagedVec::new();
         let brand_info = self.brand_info(&brand_id).get();
+        let mut total = 0;
         for pair in dest_amount_pairs {
             let (dest_address, nfts_to_send) = pair.into_tuple();
             if nfts_to_send > 0 {
@@ -113,15 +112,11 @@ pub trait NftMintingModule:
                     &brand_info,
                     nfts_to_send,
                 );
-
-                arg_pairs.push(DestAddressAmountPair {
-                    dest_address,
-                    nft_amount: nfts_to_send,
-                });
+                total += nfts_to_send;
             }
         }
 
-        self.nft_giveaway_event(&brand_id, &tier, arg_pairs);
+        self.nft_giveaway_event(&brand_id, &tier, total);
     }
 
     fn mint_and_send_random_nft(

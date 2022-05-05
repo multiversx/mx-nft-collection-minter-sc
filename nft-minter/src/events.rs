@@ -3,12 +3,6 @@ elrond_wasm::derive_imports!();
 
 use crate::{common_storage::BrandId, nft_tier::TierName};
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, ManagedVecItem)]
-pub struct DestAddressAmountPair<M: ManagedTypeApi> {
-    pub dest_address: ManagedAddress<M>,
-    pub nft_amount: usize,
-}
-
 #[elrond_wasm::module]
 pub trait EventsModule {
     #[event("brandCreated")]
@@ -32,6 +26,6 @@ pub trait EventsModule {
         &self,
         #[indexed] brand_id: &BrandId<Self::Api>,
         #[indexed] tier: &TierName<Self::Api>,
-        dest_amount_pairs: ManagedVec<DestAddressAmountPair<Self::Api>>,
+        total_nfts_given: usize,
     );
 }
