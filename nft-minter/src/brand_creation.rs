@@ -12,6 +12,7 @@ const ROYALTIES_MAX: u32 = 10_000; // 100%
 
 const MAX_BRAND_ID_LEN: usize = 50;
 pub static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
+pub static INVALID_TIER_ERR_MSG: &[u8] = b"Invalid tier";
 
 #[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
 pub struct TempCallbackTierInfo<M: ManagedTypeApi> {
@@ -52,6 +53,7 @@ pub trait BrandCreationModule:
         mint_price_token_id: TokenIdentifier,
         token_display_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
+        whitelist_expire_epoch: u64,
         tags: ManagedVec<Tag<Self::Api>>,
         tier_name_nr_nfts_pairs: MultiValueEncoded<TierArgPair<Self::Api>>,
     ) {
@@ -132,6 +134,7 @@ pub trait BrandCreationModule:
                 start: mint_start_timestamp,
                 end: mint_end_timestamp,
             },
+            whitelist_expire_timestamp: whitelist_expire_epoch,
         };
 
         self.temporary_callback_storage(&brand_id)
@@ -194,6 +197,42 @@ pub trait BrandCreationModule:
         }
 
         self.temporary_callback_storage(&brand_id).clear();
+    }
+
+    #[endpoint(addToWhitelist)]
+    fn add_to_whitelist(
+        &self,
+        brand_id: BrandId<Self::Api>,
+        users: MultiValueEncoded<ManagedAddress>,
+    ) {
+        self.require_caller_is_admin();
+
+        let mut mapper = self.mint_whitelist(&brand_id);
+        for user in users {
+            let _ = mapper.insert(user);
+        }
+    }
+
+    #[endpoint(removeFromWhitelist)]
+    fn remove_from_whitelist(
+        &self,
+        brand_id: BrandId<Self::Api>,
+        users: MultiValueEncoded<ManagedAddress>,
+    ) {
+        self.require_caller_is_admin();
+
+        let mut mapper = self.mint_whitelist(&brand_id);
+        for user in users {
+            let _ = mapper.swap_remove(&user);
+        }
+    }
+
+    #[endpoint(setMintWhitelistExpireTimestamp)]
+    fn set_mint_whitelist_expire_timestamp(&self, brand_id: BrandId<Self::Api>, timestamp: u64) {
+        self.require_caller_is_admin();
+
+        self.brand_info(&brand_id)
+            .update(|info| info.whitelist_expire_timestamp = timestamp);
     }
 
     #[storage_mapper("temporaryCallbackStorage")]

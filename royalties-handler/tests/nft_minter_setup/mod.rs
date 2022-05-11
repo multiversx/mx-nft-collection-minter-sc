@@ -211,6 +211,7 @@ where
                     managed_token_id!(mint_price_token_id),
                     managed_buffer!(token_display_name),
                     managed_buffer!(token_ticker),
+                    0,
                     managed_tags,
                     tier_args,
                 );

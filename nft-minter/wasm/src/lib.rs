@@ -8,6 +8,7 @@ elrond_wasm_node::wasm_endpoints! {
     nft_minter
     (
         callBack
+        addToWhitelist
         addUserToAdminList
         buyRandomNft
         claimMintPayments
@@ -20,6 +21,7 @@ elrond_wasm_node::wasm_endpoints! {
         getCollectionsCategory
         getMaxNftsPerTransaction
         getMintPaymentsClaimAddress
+        getMintWhitelist
         getNftTiersForBrand
         getNftTokenIdForBrand
         getPriceForTier
@@ -30,9 +32,11 @@ elrond_wasm_node::wasm_endpoints! {
         giveawayNfts
         issueTokenForBrand
         nftIdOffsetForTier
+        removeFromWhitelist
         removeUserFromAdminList
         setMaxNftsPerTransaction
         setMintPaymentsClaimAddress
+        setMintWhitelistExpireTimestamp
         setRoyaltiesClaimAddress
     )
 }

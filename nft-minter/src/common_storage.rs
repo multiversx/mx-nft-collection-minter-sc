@@ -17,6 +17,7 @@ pub struct BrandInfo<M: ManagedTypeApi> {
     pub media_type: MediaType<M>,
     pub royalties: BigUint<M>,
     pub mint_period: TimePeriod,
+    pub whitelist_expire_timestamp: u64,
 }
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
@@ -70,4 +71,8 @@ pub trait CommonStorageModule {
         &self,
         brand_id: &BrandId<Self::Api>,
     ) -> SingleValueMapper<ManagedVec<Tag<Self::Api>>>;
+
+    #[view(getMintWhitelist)]
+    #[storage_mapper("mintWhitelist")]
+    fn mint_whitelist(&self, brand_id: &BrandId<Self::Api>) -> UnorderedSetMapper<ManagedAddress>;
 }
