@@ -2,8 +2,9 @@ pub mod constants;
 pub mod nft_minter_interactor;
 
 use constants::*;
-use elrond_wasm::types::{ManagedBuffer, ManagedByteArray};
-use elrond_wasm_debug::{managed_biguint, managed_buffer, rust_biguint, DebugApi};
+use elrond_wasm::types::{ManagedBuffer, ManagedByteArray, MultiValueEncoded};
+use elrond_wasm_debug::{managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi};
+use nft_minter::brand_creation::BrandCreationModule;
 use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod};
 use nft_minter::nft_attributes_builder::{NftAttributesBuilderModule, COLLECTION_HASH_LEN};
 use nft_minter::nft_tier::NftTierModule;
@@ -38,6 +39,7 @@ fn create_brands_test() {
             &[],
             FIRST_TIERS,
             FIRST_NFT_AMOUNTS,
+            0,
         )
         .assert_user_error("Collection hash already exists");
 
@@ -57,6 +59,7 @@ fn create_brands_test() {
             &[],
             FIRST_TIERS,
             FIRST_NFT_AMOUNTS,
+            0,
         )
         .assert_user_error("Brand already exists");
 
@@ -76,6 +79,7 @@ fn create_brands_test() {
             &[],
             FIRST_TIERS,
             FIRST_NFT_AMOUNTS,
+            0,
         )
         .assert_user_error("Invalid media type");
 
@@ -102,6 +106,7 @@ fn create_brands_test() {
                     start: FIRST_MINT_START_TIMESTAMP,
                     end: FIRST_MINT_END_TIMESTAMP,
                 },
+                whitelist_expire_timestamp: 0,
             };
             assert_eq!(result.brand_info, expected_brand_info);
 
@@ -320,6 +325,72 @@ fn buy_random_nft_test() {
             1,
         )
         .assert_user_error("May not mint after deadline");
+}
+
+#[test]
+fn buy_whitelist_test() {
+    let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
+    let first_tier = FIRST_TIERS[0];
+    let first_user_addr = nm_setup.first_user_address.clone();
+
+    nm_setup.create_default_brands();
+    nm_setup
+        .b_mock
+        .set_block_timestamp(FIRST_MINT_START_TIMESTAMP);
+
+    nm_setup
+        .b_mock
+        .execute_tx(
+            &nm_setup.owner_address.clone(),
+            &nm_setup.nm_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                sc.set_mint_whitelist_expire_timestamp(
+                    managed_buffer!(FIRST_BRAND_ID),
+                    FIRST_MINT_START_TIMESTAMP + 1,
+                );
+            },
+        )
+        .assert_ok();
+
+    // try buy, not in whitelist
+    nm_setup
+        .call_buy_random_nft(
+            &first_user_addr,
+            FIRST_MINT_PRICE_TOKEN_ID,
+            FIRST_MINT_PRICE_AMOUNT,
+            FIRST_BRAND_ID,
+            first_tier,
+            1,
+        )
+        .assert_user_error("Not in whitelist");
+
+    nm_setup
+        .b_mock
+        .execute_tx(
+            &nm_setup.owner_address.clone(),
+            &nm_setup.nm_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                let mut args = MultiValueEncoded::new();
+                args.push(managed_address!(&first_user_addr));
+                sc.add_to_whitelist(managed_buffer!(FIRST_BRAND_ID), args);
+            },
+        )
+        .assert_ok();
+
+    // buy ok
+
+    nm_setup
+        .call_buy_random_nft(
+            &first_user_addr,
+            FIRST_MINT_PRICE_TOKEN_ID,
+            FIRST_MINT_PRICE_AMOUNT,
+            FIRST_BRAND_ID,
+            first_tier,
+            1,
+        )
+        .assert_ok();
 }
 
 #[test]

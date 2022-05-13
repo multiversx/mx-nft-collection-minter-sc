@@ -94,6 +94,7 @@ where
             FIRST_TAGS,
             FIRST_TIERS,
             FIRST_NFT_AMOUNTS,
+            0,
         )
         .assert_ok();
 
@@ -111,6 +112,7 @@ where
             SECOND_TAGS,
             SECOND_TIERS,
             SECOND_NFT_AMOUNTS,
+            0,
         )
         .assert_ok();
 
@@ -168,6 +170,7 @@ where
         tags: &[&[u8]],
         tiers: &[&[u8]],
         nr_nfts_per_tier: &[usize],
+        whitelist_expire_epoch: u64,
     ) -> TxResult {
         self.b_mock.execute_tx(
             &self.owner_address,
@@ -205,6 +208,7 @@ where
                     managed_token_id!(mint_price_token_id),
                     managed_buffer!(token_display_name),
                     managed_buffer!(token_ticker),
+                    whitelist_expire_epoch,
                     managed_tags,
                     tier_args,
                 );

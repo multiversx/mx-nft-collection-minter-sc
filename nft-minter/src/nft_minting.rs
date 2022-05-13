@@ -1,7 +1,7 @@
 elrond_wasm::imports!();
 
 use crate::{
-    brand_creation::INVALID_BRAND_ID_ERR_MSG,
+    brand_creation::{INVALID_BRAND_ID_ERR_MSG, INVALID_TIER_ERR_MSG},
     common_storage::{BrandId, BrandInfo, MintPrice, PaymentsVec},
     nft_tier::TierName,
 };
@@ -31,7 +31,7 @@ pub trait NftMintingModule:
         );
         require!(
             self.nft_tiers_for_brand(&brand_id).contains(&tier),
-            "Invalid tier"
+            INVALID_TIER_ERR_MSG
         );
 
         let nfts_to_buy = match opt_nfts_to_buy {
@@ -71,9 +71,16 @@ pub trait NftMintingModule:
             "May not mint after deadline"
         );
 
+        let caller = self.blockchain().get_caller();
+        if current_timestamp < brand_info.whitelist_expire_timestamp {
+            require!(
+                self.mint_whitelist(&brand_id).contains(&caller),
+                "Not in whitelist"
+            );
+        }
+
         self.add_mint_payment(payment.token_identifier, payment.amount);
 
-        let caller = self.blockchain().get_caller();
         let output_payments =
             self.mint_and_send_random_nft(&caller, &brand_id, &tier, &brand_info, nfts_to_buy);
 
@@ -97,7 +104,7 @@ pub trait NftMintingModule:
         );
         require!(
             self.nft_tiers_for_brand(&brand_id).contains(&tier),
-            "Invalid tier"
+            INVALID_TIER_ERR_MSG
         );
 
         let brand_info = self.brand_info(&brand_id).get();
