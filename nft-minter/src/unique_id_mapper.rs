@@ -45,10 +45,12 @@ where
         self.set_internal_mapper_len(len);
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         self.vec_mapper.len()
     }
 
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.vec_mapper.is_empty()
     }
@@ -76,13 +78,10 @@ where
             last_item
         };
 
+        self.vec_mapper.set(last_item_index, &EMPTY_ENTRY);
         self.set_internal_mapper_len(last_item_index - 1);
 
         current_item
-    }
-
-    pub fn clear_len(&mut self) {
-        self.set_internal_mapper_len(0);
     }
 
     // Manually sets the internal VecMapper's len value
