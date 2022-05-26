@@ -53,7 +53,7 @@ pub trait BrandCreationModule:
         mint_price_token_id: TokenIdentifier,
         token_display_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
-        whitelist_expire_epoch: u64,
+        whitelist_expire_timestamp: u64,
         tags: ManagedVec<Tag<Self::Api>>,
         tier_name_nr_nfts_pairs: MultiValueEncoded<TierArgPair<Self::Api>>,
     ) {
@@ -134,7 +134,7 @@ pub trait BrandCreationModule:
                 start: mint_start_timestamp,
                 end: mint_end_timestamp,
             },
-            whitelist_expire_timestamp: whitelist_expire_epoch,
+            whitelist_expire_timestamp,
         };
 
         self.temporary_callback_storage(&brand_id)
