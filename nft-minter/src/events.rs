@@ -18,7 +18,7 @@ pub trait EventsModule {
         #[indexed] buyer_address: &ManagedAddress,
         #[indexed] brand_id: &BrandId<Self::Api>,
         #[indexed] tier: &TierName<Self::Api>,
-        nr_nfts_bought: usize,
+        #[indexed] nr_nfts_bought: usize,
     );
 
     #[event("nftGiveaway")]
@@ -26,6 +26,6 @@ pub trait EventsModule {
         &self,
         #[indexed] brand_id: &BrandId<Self::Api>,
         #[indexed] tier: &TierName<Self::Api>,
-        total_nfts_given: usize,
+        #[indexed] total_nfts_given: usize,
     );
 }
