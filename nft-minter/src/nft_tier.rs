@@ -1,9 +1,6 @@
 elrond_wasm::imports!();
 
-use crate::{
-    common_storage::BrandId,
-    unique_id_mapper::{UniqueId, UniqueIdMapper},
-};
+use crate::common_storage::BrandId;
 
 pub type TierName<M> = ManagedBuffer<M>;
 
@@ -22,7 +19,7 @@ pub trait NftTierModule {
         require!(last_id_index > 0, "No more NFTs available for brand");
 
         let rand_index = self.get_random_usize(VEC_MAPPER_FIRST_ITEM_INDEX, last_id_index + 1);
-        let rand_id = id_mapper.get_and_swap_remove(rand_index);
+        let rand_id = id_mapper.swap_remove(rand_index);
         let id_offset = self.nft_id_offset_for_tier(brand_id, tier).get();
 
         rand_id + id_offset

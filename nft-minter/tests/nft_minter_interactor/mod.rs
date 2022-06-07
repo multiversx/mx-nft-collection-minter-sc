@@ -14,14 +14,15 @@ use nft_minter::nft_attributes_builder::COLLECTION_HASH_LEN;
 use nft_minter::nft_minting::NftMintingModule;
 use nft_minter::NftMinter;
 
-// Temporary re-implementation until next elrond-wasm version is released with the fix
 #[macro_export]
 macro_rules! managed_token_id {
     ($bytes:expr) => {{
-        if $bytes == elrond_wasm::types::TokenIdentifier::<DebugApi>::EGLD_REPRESENTATION {
-            elrond_wasm::types::TokenIdentifier::egld()
+        if $bytes == elrond_wasm::types::EgldOrEsdtTokenIdentifier::<DebugApi>::EGLD_REPRESENTATION
+        {
+            elrond_wasm::types::EgldOrEsdtTokenIdentifier::egld()
         } else {
-            elrond_wasm::types::TokenIdentifier::from_esdt_bytes($bytes)
+            let ___token_id___ = elrond_wasm::types::TokenIdentifier::from_esdt_bytes($bytes);
+            elrond_wasm::types::EgldOrEsdtTokenIdentifier::esdt(___token_id___)
         }
     }};
 }

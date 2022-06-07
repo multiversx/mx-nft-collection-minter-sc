@@ -1,6 +1,6 @@
 elrond_wasm::imports!();
 
-use crate::{common_storage::BrandId, unique_id_mapper::UniqueId};
+use crate::common_storage::BrandId;
 
 static TAGS_PREFIX: &[u8] = b"tags:";
 static TAG_SEPARATOR: &[u8] = b",";

@@ -56,7 +56,11 @@ pub trait RewardEntriesModule:
             if token_id.is_egld() {
                 egld_amount = amount_per_holder;
             } else {
-                esdt_payments.push(EsdtTokenPayment::new(token_id, 0, amount_per_holder));
+                esdt_payments.push(EsdtTokenPayment::new(
+                    token_id.unwrap_esdt(),
+                    0,
+                    amount_per_holder,
+                ));
             }
         }
 

@@ -35,7 +35,7 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
     fn claim_common(
         &self,
         claim_allowed_address: ManagedAddress,
-        mapper: &mut MapMapper<TokenIdentifier, BigUint>,
+        mapper: &mut MapMapper<EgldOrEsdtTokenIdentifier, BigUint>,
     ) -> EgldValuePaymentsVecPair<Self::Api> {
         let caller = self.blockchain().get_caller();
         require!(caller == claim_allowed_address, "Claim not allowed");
@@ -46,7 +46,7 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
             if token.is_egld() {
                 egld_value = amount;
             } else {
-                other_payments.push(EsdtTokenPayment::new(token, 0, amount));
+                other_payments.push(EsdtTokenPayment::new(token.unwrap_esdt(), 0, amount));
             }
         }
 
@@ -62,12 +62,12 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
         (egld_value, other_payments).into()
     }
 
-    fn add_mint_payment(&self, token: TokenIdentifier, amount: BigUint) {
+    fn add_mint_payment(&self, token: EgldOrEsdtTokenIdentifier, amount: BigUint) {
         let mut mapper = self.accumulated_mint_payments();
         self.add_common(&mut mapper, token, amount);
     }
 
-    fn add_royalties(&self, token: TokenIdentifier, amount: BigUint) {
+    fn add_royalties(&self, token: EgldOrEsdtTokenIdentifier, amount: BigUint) {
         let mut mapper = self.accumulated_royalties();
         self.add_common(&mut mapper, token, amount);
     }
@@ -75,14 +75,18 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
     fn add_royalties_multiple(&self, payments: &ManagedVec<EsdtTokenPayment<Self::Api>>) {
         let mut mapper = self.accumulated_royalties();
         for p in payments {
-            self.add_common(&mut mapper, p.token_identifier, p.amount);
+            self.add_common(
+                &mut mapper,
+                EgldOrEsdtTokenIdentifier::esdt(p.token_identifier),
+                p.amount,
+            );
         }
     }
 
     fn add_common(
         &self,
-        mapper: &mut MapMapper<TokenIdentifier, BigUint>,
-        token: TokenIdentifier,
+        mapper: &mut MapMapper<EgldOrEsdtTokenIdentifier, BigUint>,
+        token: EgldOrEsdtTokenIdentifier,
         amount: BigUint,
     ) {
         match mapper.get(&token) {
@@ -106,9 +110,9 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
 
     #[view(getAccumulatedRoyalties)]
     #[storage_mapper("accumulatedRoyalties")]
-    fn accumulated_royalties(&self) -> MapMapper<TokenIdentifier, BigUint>;
+    fn accumulated_royalties(&self) -> MapMapper<EgldOrEsdtTokenIdentifier, BigUint>;
 
     #[view(getAccumulatedMintPayments)]
     #[storage_mapper("accumulatedMintPayments")]
-    fn accumulated_mint_payments(&self) -> MapMapper<TokenIdentifier, BigUint>;
+    fn accumulated_mint_payments(&self) -> MapMapper<EgldOrEsdtTokenIdentifier, BigUint>;
 }

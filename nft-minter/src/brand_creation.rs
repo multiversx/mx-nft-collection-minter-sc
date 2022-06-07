@@ -50,7 +50,7 @@ pub trait BrandCreationModule:
         royalties: BigUint,
         mint_start_timestamp: u64,
         mint_end_timestamp: u64,
-        mint_price_token_id: TokenIdentifier,
+        mint_price_token_id: EgldOrEsdtTokenIdentifier,
         token_display_name: ManagedBuffer,
         token_ticker: ManagedBuffer,
         whitelist_expire_timestamp: u64,
