@@ -76,10 +76,7 @@ pub trait BrandCreationModule:
             "Invalid media type"
         );
         require!(royalties <= ROYALTIES_MAX, "Royalties cannot be over 100%");
-        require!(
-            mint_price_token_id.is_egld() || mint_price_token_id.is_valid_esdt_identifier(),
-            "Invalid price token"
-        );
+        require!(mint_price_token_id.is_valid(), "Invalid price token");
 
         let is_new_collection = self
             .registered_collection_hashes()

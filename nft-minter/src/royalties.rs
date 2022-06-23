@@ -53,10 +53,10 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
         mapper.clear();
 
         if egld_value > 0 {
-            self.send().direct_egld(&caller, &egld_value, &[]);
+            self.send().direct_egld(&caller, &egld_value);
         }
         if !other_payments.is_empty() {
-            self.send().direct_multi(&caller, &other_payments, &[]);
+            self.send().direct_multi(&caller, &other_payments);
         }
 
         (egld_value, other_payments).into()

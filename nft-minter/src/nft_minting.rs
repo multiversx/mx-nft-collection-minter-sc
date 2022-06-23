@@ -177,7 +177,7 @@ pub trait NftMintingModule:
             ));
         }
 
-        self.send().direct_multi(to, &nft_output_payments, &[]);
+        self.send().direct_multi(to, &nft_output_payments);
 
         nft_output_payments
     }

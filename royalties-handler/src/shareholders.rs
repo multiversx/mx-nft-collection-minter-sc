@@ -49,12 +49,11 @@ pub trait ShareholdersModule:
             }
 
             if reward_entry.egld_amount > 0 {
-                self.send()
-                    .direct_egld(&caller, &reward_entry.egld_amount, &[]);
+                self.send().direct_egld(&caller, &reward_entry.egld_amount);
             }
             if !reward_entry.esdt_payments.is_empty() {
                 self.send()
-                    .direct_multi(&caller, &reward_entry.esdt_payments, &[]);
+                    .direct_multi(&caller, &reward_entry.esdt_payments);
             }
         }
     }
