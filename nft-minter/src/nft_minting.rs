@@ -134,6 +134,11 @@ pub trait NftMintingModule:
         brand_info: &BrandInfo<Self::Api>,
         nfts_to_send: usize,
     ) -> PaymentsVec<Self::Api> {
+        require!(
+            !self.blockchain().is_smart_contract(to),
+            "Only user accounts are allowed to mint"
+        );
+
         let total_available_nfts = self.available_ids(brand_id, tier).len();
         require!(
             nfts_to_send <= total_available_nfts,
