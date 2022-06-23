@@ -11,7 +11,6 @@ pub mod nft_marketplace_interactor;
 pub mod nft_minting;
 pub mod nft_tier;
 pub mod royalties;
-pub mod unique_id_mapper;
 pub mod views;
 
 #[elrond_wasm::contract]

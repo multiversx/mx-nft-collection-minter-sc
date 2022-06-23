@@ -11,4 +11,4 @@ authors = [ "Dorin Marian Iancu, dorin.iancu@elrond.com" ]
 path = ".."
 
 [dependencies.elrond-wasm-debug]
-version = "0.31.1"
+version = "0.33.0"

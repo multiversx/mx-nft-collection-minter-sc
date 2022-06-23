@@ -2,7 +2,7 @@ elrond_wasm::imports!();
 
 use crate::{
     brand_creation::{INVALID_BRAND_ID_ERR_MSG, INVALID_TIER_ERR_MSG},
-    common_storage::{BrandId, BrandInfo, MintPrice, PaymentsVec},
+    common_storage::{BrandId, BrandInfo, PaymentsVec},
     nft_tier::TierName,
 };
 
@@ -51,8 +51,8 @@ pub trait NftMintingModule:
             OptionalValue::None => NFT_AMOUNT as usize,
         };
 
-        let price_for_tier: MintPrice<Self::Api> = self.price_for_tier(&brand_id, &tier).get();
-        let payment: EsdtTokenPayment<Self::Api> = self.call_value().payment();
+        let price_for_tier = self.price_for_tier(&brand_id, &tier).get();
+        let payment = self.call_value().egld_or_single_esdt();
         let total_required_amount = &price_for_tier.amount * (nfts_to_buy as u32);
         require!(
             payment.token_identifier == price_for_tier.token_id
@@ -134,6 +134,11 @@ pub trait NftMintingModule:
         brand_info: &BrandInfo<Self::Api>,
         nfts_to_send: usize,
     ) -> PaymentsVec<Self::Api> {
+        require!(
+            !self.blockchain().is_smart_contract(to),
+            "Only user accounts are allowed to mint"
+        );
+
         let total_available_nfts = self.available_ids(brand_id, tier).len();
         require!(
             nfts_to_send <= total_available_nfts,
@@ -177,7 +182,7 @@ pub trait NftMintingModule:
             ));
         }
 
-        self.send().direct_multi(to, &nft_output_payments, &[]);
+        self.send().direct_multi(to, &nft_output_payments);
 
         nft_output_payments
     }

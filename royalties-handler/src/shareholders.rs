@@ -49,12 +49,11 @@ pub trait ShareholdersModule:
             }
 
             if reward_entry.egld_amount > 0 {
-                self.send()
-                    .direct_egld(&caller, &reward_entry.egld_amount, &[]);
+                self.send().direct_egld(&caller, &reward_entry.egld_amount);
             }
             if !reward_entry.esdt_payments.is_empty() {
                 self.send()
-                    .direct_multi(&caller, &reward_entry.esdt_payments, &[]);
+                    .direct_multi(&caller, &reward_entry.esdt_payments);
             }
         }
     }
@@ -90,16 +89,22 @@ pub trait ShareholdersModule:
     fn get_claimable_tokens_for_reward_entry(
         &self,
         entry_id: usize,
-    ) -> MultiValueEncoded<MultiValue2<TokenIdentifier, BigUint>> {
+    ) -> MultiValueEncoded<MultiValue2<EgldOrEsdtTokenIdentifier, BigUint>> {
         let mut result = MultiValueEncoded::new();
         let reward_entry: RewardEntry<Self::Api> =
             self.claimable_tokens_for_reward_entry(entry_id).get();
 
         if reward_entry.egld_amount > 0 {
-            result.push((TokenIdentifier::egld(), reward_entry.egld_amount).into());
+            result.push((EgldOrEsdtTokenIdentifier::egld(), reward_entry.egld_amount).into());
         }
         for p in &reward_entry.esdt_payments {
-            result.push((p.token_identifier, p.amount).into());
+            result.push(
+                (
+                    EgldOrEsdtTokenIdentifier::esdt(p.token_identifier),
+                    p.amount,
+                )
+                    .into(),
+            );
         }
 
         result

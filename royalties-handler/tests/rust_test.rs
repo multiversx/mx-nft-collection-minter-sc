@@ -90,7 +90,7 @@ fn create_new_reward_entry_test() {
                 RewardEntry::<DebugApi> {
                     egld_amount: managed_biguint!(MINT_PAYMENTS_BALANCE / 3),
                     esdt_payments: ManagedVec::from_single_item(EsdtTokenPayment::<DebugApi>::new(
-                        managed_token_id!(ROYALTIES_TOKEN_ID),
+                        managed_token_id!(ROYALTIES_TOKEN_ID).unwrap_esdt(),
                         0,
                         managed_biguint!(ROYALTIES_TOKEN_BALANCE / 3)
                     ))

@@ -28,7 +28,7 @@ pub struct TimePeriod {
 
 #[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct MintPrice<M: ManagedTypeApi> {
-    pub token_id: TokenIdentifier<M>,
+    pub token_id: EgldOrEsdtTokenIdentifier<M>,
     pub amount: BigUint<M>,
 }
 

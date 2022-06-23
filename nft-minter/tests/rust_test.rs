@@ -93,7 +93,7 @@ fn create_brands_test() {
             assert_eq!(result.brand_id, expected_brand_id);
 
             let expected_token_id = managed_token_id!(FIRST_TOKEN_ID);
-            assert_eq!(result.nft_token_id, expected_token_id);
+            assert_eq!(result.nft_token_id, expected_token_id.unwrap_esdt());
 
             let expected_brand_info = BrandInfo::<DebugApi> {
                 collection_hash: ManagedByteArray::<DebugApi, COLLECTION_HASH_LEN>::new_from_bytes(
