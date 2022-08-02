@@ -11,6 +11,7 @@ static SUPPORTED_MEDIA_TYPES: &[&[u8]] = &[
     b"jpeg",
     b"jpg",
     b"gif",
+    b"webp",
     b"acc",
     b"flac",
     b"m4a",
