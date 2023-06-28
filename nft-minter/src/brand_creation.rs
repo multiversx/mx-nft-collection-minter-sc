@@ -9,7 +9,7 @@ use crate::{
 
 const NFT_ISSUE_COST: u64 = 50_000_000_000_000_000; // 0.05 EGLD
 const ROYALTIES_MAX: u32 = 10_000; // 100%
-const ISSUE_AND_CALLBACK_COST: u64 = 70_000_000;
+const ISSUE_AND_CALLBACK_COST: u64 = 55_000_000;
 
 const MAX_BRAND_ID_LEN: usize = 50;
 pub static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
