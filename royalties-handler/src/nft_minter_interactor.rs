@@ -1,8 +1,8 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use nft_minter::{common_storage::EgldValuePaymentsVecPair, royalties::ProxyTrait as _};
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait NftMinterInteractorModule:
     crate::common_storage::CommonStorageModule + crate::token_balance::TokenBalanceModule
 {

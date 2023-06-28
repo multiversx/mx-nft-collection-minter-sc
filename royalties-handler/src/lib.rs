@@ -1,6 +1,6 @@
 #![no_std]
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 pub mod common_storage;
 pub mod nft_minter_interactor;
@@ -8,7 +8,7 @@ pub mod reward_entries;
 pub mod shareholders;
 pub mod token_balance;
 
-#[elrond_wasm::contract]
+#[multiversx_sc::contract]
 pub trait RoyaltiesHandler:
     common_storage::CommonStorageModule
     + nft_minter_interactor::NftMinterInteractorModule

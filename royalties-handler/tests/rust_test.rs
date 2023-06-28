@@ -3,8 +3,8 @@ pub mod nft_minter_setup;
 pub mod royalties_handler_setup;
 
 use constants::*;
-use elrond_wasm::types::{EsdtTokenPayment, ManagedVec};
-use elrond_wasm_debug::{managed_address, managed_biguint, rust_biguint, DebugApi};
+use multiversx_sc::types::{EsdtTokenPayment, ManagedVec};
+use multiversx_sc_scenario::{managed_address, managed_biguint, rust_biguint, DebugApi};
 use royalties_handler::reward_entries::RewardEntriesModule;
 use royalties_handler::{reward_entries::RewardEntry, token_balance::TokenBalanceModule};
 use royalties_handler_setup::*;

@@ -1,6 +1,6 @@
 #![no_std]
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 pub mod admin_whitelist;
 pub mod brand_creation;
@@ -13,7 +13,7 @@ pub mod nft_tier;
 pub mod royalties;
 pub mod views;
 
-#[elrond_wasm::contract]
+#[multiversx_sc::contract]
 pub trait NftMinter:
     common_storage::CommonStorageModule
     + admin_whitelist::AdminWhitelistModule

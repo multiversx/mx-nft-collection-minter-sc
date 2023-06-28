@@ -1,4 +1,4 @@
 #[test]
 fn issue_go() {
-    elrond_wasm_debug::mandos_go("mandos/esdt_system_sc.scen.json");
+    multiversx_sc_scenario::run_go("mandos/esdt_system_sc.scen.json");
 }

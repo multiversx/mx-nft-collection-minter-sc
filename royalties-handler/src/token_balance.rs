@@ -1,8 +1,8 @@
 use nft_minter::common_storage::EgldValuePaymentsVecPair;
 
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait TokenBalanceModule {
     fn add_balance(&self, token: EgldOrEsdtTokenIdentifier, amount: &BigUint) {
         self.balance_for_token(&token).update(|b| {
