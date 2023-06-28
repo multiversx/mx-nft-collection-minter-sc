@@ -1,9 +1,9 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::reward_entries::{RewardEntry, FIRST_ENTRY_ID};
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait ShareholdersModule:
     crate::common_storage::CommonStorageModule
     + crate::reward_entries::RewardEntriesModule

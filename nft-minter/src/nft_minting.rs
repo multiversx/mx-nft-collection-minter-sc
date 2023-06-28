@@ -1,4 +1,4 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::{
     brand_creation::{INVALID_BRAND_ID_ERR_MSG, INVALID_TIER_ERR_MSG},
@@ -8,7 +8,7 @@ use crate::{
 
 const NFT_AMOUNT: u32 = 1;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait NftMintingModule:
     crate::common_storage::CommonStorageModule
     + crate::nft_tier::NftTierModule

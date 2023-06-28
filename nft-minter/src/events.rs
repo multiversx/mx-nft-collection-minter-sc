@@ -1,9 +1,9 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::{common_storage::BrandId, nft_tier::TierName};
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait EventsModule {
     #[event("brandCreated")]
     fn brand_created_event(
