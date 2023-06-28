@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::{
     common_storage::{BrandId, BrandInfo, MintPrice, TimePeriod},
@@ -9,6 +9,7 @@ use crate::{
 
 const NFT_ISSUE_COST: u64 = 50_000_000_000_000_000; // 0.05 EGLD
 const ROYALTIES_MAX: u32 = 10_000; // 100%
+const ISSUE_AND_CALLBACK_COST: u64 = 55_000_000;
 
 const MAX_BRAND_ID_LEN: usize = 50;
 pub static INVALID_BRAND_ID_ERR_MSG: &[u8] = b"Invalid Brand ID";
@@ -32,7 +33,7 @@ pub struct TempCallbackStorageInfo<M: ManagedTypeApi> {
 /// Tier name, number of NFTs, price
 pub type TierArgPair<M> = MultiValue3<TierName<M>, usize, BigUint<M>>;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait BrandCreationModule:
     crate::admin_whitelist::AdminWhitelistModule
     + crate::common_storage::CommonStorageModule
@@ -65,7 +66,7 @@ pub trait BrandCreationModule:
             INVALID_BRAND_ID_ERR_MSG
         );
 
-        let payment_amount = self.call_value().egld_value();
+        let payment_amount = self.call_value().egld_value().clone_value();
         require!(
             payment_amount == NFT_ISSUE_COST,
             "Invalid payment amount. Issue costs exactly 0.05 EGLD"
@@ -141,6 +142,9 @@ pub trait BrandCreationModule:
                 tier_info_entries: tiers_info,
             });
 
+        let gas_before_issue = self.blockchain().get_gas_left();
+
+        require!(gas_before_issue > ISSUE_AND_CALLBACK_COST, "Not enough gas");
         self.nft_token(&brand_id).issue_and_set_all_roles(
             EsdtTokenType::NonFungible,
             payment_amount,
@@ -163,7 +167,7 @@ pub trait BrandCreationModule:
                 let cb_info: TempCallbackStorageInfo<Self::Api> =
                     self.temporary_callback_storage(&brand_id).get();
 
-                self.nft_token(&brand_id).set_token_id(&token_id);
+                self.nft_token(&brand_id).set_token_id(token_id.clone());
                 self.brand_info(&brand_id).set(&cb_info.brand_info);
 
                 for tier_info in cb_info.tier_info_entries {

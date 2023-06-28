@@ -2,8 +2,8 @@ pub mod constants;
 pub mod nft_minter_interactor;
 
 use constants::*;
-use elrond_wasm::types::{ManagedBuffer, ManagedByteArray, MultiValueEncoded};
-use elrond_wasm_debug::{managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi};
+use multiversx_sc::types::{ManagedBuffer, ManagedByteArray, MultiValueEncoded};
+use multiversx_sc_scenario::{managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi};
 use nft_minter::brand_creation::BrandCreationModule;
 use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod};
 use nft_minter::nft_attributes_builder::{NftAttributesBuilderModule, COLLECTION_HASH_LEN};

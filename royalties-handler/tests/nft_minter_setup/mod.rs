@@ -1,9 +1,9 @@
 use super::constants::*;
-use elrond_wasm::types::{Address, EsdtLocalRole, ManagedVec, MultiValueEncoded};
-use elrond_wasm_debug::{
+use multiversx_sc::types::{Address, EsdtLocalRole, ManagedVec, MultiValueEncoded};
+use multiversx_sc_scenario::{
     managed_address, managed_biguint, managed_buffer, rust_biguint,
-    testing_framework::{BlockchainStateWrapper, ContractObjWrapper},
-    tx_mock::TxResult,
+    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
+    whitebox::TxResult,
     DebugApi,
 };
 use nft_minter::brand_creation::BrandCreationModule;
@@ -14,12 +14,12 @@ use nft_minter::NftMinter;
 #[macro_export]
 macro_rules! managed_token_id {
     ($bytes:expr) => {{
-        if $bytes == elrond_wasm::types::EgldOrEsdtTokenIdentifier::<DebugApi>::EGLD_REPRESENTATION
+        if $bytes == multiversx_sc::types::EgldOrEsdtTokenIdentifier::<DebugApi>::EGLD_REPRESENTATION
         {
-            elrond_wasm::types::EgldOrEsdtTokenIdentifier::egld()
+            multiversx_sc::types::EgldOrEsdtTokenIdentifier::egld()
         } else {
-            let ___token_id___ = elrond_wasm::types::TokenIdentifier::from_esdt_bytes($bytes);
-            elrond_wasm::types::EgldOrEsdtTokenIdentifier::esdt(___token_id___)
+            let ___token_id___ = multiversx_sc::types::TokenIdentifier::from_esdt_bytes($bytes);
+            multiversx_sc::types::EgldOrEsdtTokenIdentifier::esdt(___token_id___)
         }
     }};
 }

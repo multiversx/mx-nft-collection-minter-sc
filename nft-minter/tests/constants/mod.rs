@@ -1,6 +1,6 @@
 use nft_minter::nft_attributes_builder::COLLECTION_HASH_LEN;
 
-pub const ESDT_SYSTEM_SC_ADDRESS_ARRAY: [u8; 32] = elrond_wasm::hex_literal::hex!(
+pub const ESDT_SYSTEM_SC_ADDRESS_ARRAY: [u8; 32] = multiversx_sc::hex_literal::hex!(
     "000000000000000000010000000000000000000000000000000000000002ffff"
 );
 pub const ISSUE_COST: u64 = 50_000_000_000_000_000;

@@ -1,11 +1,11 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::common_storage::EgldValuePaymentsVecPair;
 
 pub mod nft_marketplace_proxy {
-    elrond_wasm::imports!();
+    multiversx_sc::imports!();
 
-    #[elrond_wasm::proxy]
+    #[multiversx_sc::proxy]
     pub trait NftMarketplaceProxy {
         #[endpoint(claimTokens)]
         fn claim_tokens(
@@ -16,7 +16,7 @@ pub mod nft_marketplace_proxy {
     }
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait NftMarketplaceInteractorModule:
     crate::royalties::RoyaltiesModule + crate::admin_whitelist::AdminWhitelistModule
 {

@@ -1,8 +1,8 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::common_storage::EgldValuePaymentsVecPair;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
     #[endpoint(setRoyaltiesClaimAddress)]
     fn set_royalties_claim_address(&self, new_address: ManagedAddress) {

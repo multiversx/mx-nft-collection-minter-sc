@@ -1,4 +1,4 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::common_storage::BrandId;
 
@@ -31,7 +31,7 @@ pub type Tag<M> = ManagedBuffer<M>;
 pub type MediaType<M> = ManagedBuffer<M>;
 pub type GenericAttributes<M> = ManagedBuffer<M>;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait NftAttributesBuilderModule: crate::common_storage::CommonStorageModule {
     fn build_nft_attributes(
         &self,

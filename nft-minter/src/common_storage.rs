@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use crate::{
     nft_attributes_builder::{CollectionHash, MediaType, Tag},
@@ -32,7 +32,7 @@ pub struct MintPrice<M: ManagedTypeApi> {
     pub amount: BigUint<M>,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait CommonStorageModule {
     #[view(getCollectionsCategory)]
     #[storage_mapper("collectionsCategory")]

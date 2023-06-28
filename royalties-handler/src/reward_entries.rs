@@ -1,5 +1,5 @@
-elrond_wasm::imports!();
-elrond_wasm::derive_imports!();
+multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 use nft_minter::common_storage::PaymentsVec;
 
@@ -11,7 +11,7 @@ pub struct RewardEntry<M: ManagedTypeApi> {
     pub esdt_payments: PaymentsVec<M>,
 }
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait RewardEntriesModule:
     crate::common_storage::CommonStorageModule + crate::token_balance::TokenBalanceModule
 {

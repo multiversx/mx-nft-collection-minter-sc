@@ -1,9 +1,9 @@
 use crate::nft_minter_setup::NftMinterSetup;
-use elrond_wasm::types::{Address, MultiValueEncoded};
-use elrond_wasm_debug::{
+use multiversx_sc::types::{Address, MultiValueEncoded};
+use multiversx_sc_scenario::{
     managed_address, rust_biguint,
-    testing_framework::{BlockchainStateWrapper, ContractObjWrapper},
-    tx_mock::TxResult,
+    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
+    whitebox::TxResult,
     DebugApi,
 };
 use nft_minter::royalties::RoyaltiesModule;

@@ -1,4 +1,4 @@
-elrond_wasm::imports!();
+multiversx_sc::imports!();
 
 use crate::common_storage::BrandId;
 
@@ -7,7 +7,7 @@ pub type TierName<M> = ManagedBuffer<M>;
 const VEC_MAPPER_FIRST_ITEM_INDEX: usize = 1;
 pub const MAX_TIERS_PER_BRAND: usize = 5;
 
-#[elrond_wasm::module]
+#[multiversx_sc::module]
 pub trait NftTierModule {
     fn get_next_random_id(
         &self,
@@ -27,7 +27,7 @@ pub trait NftTierModule {
 
     /// range is [min, max)
     fn get_random_usize(&self, min: usize, max: usize) -> usize {
-        let mut rand_source = RandomnessSource::<Self::Api>::new();
+        let mut rand_source = RandomnessSource::new();
         rand_source.next_usize_in_range(min, max)
     }
 
