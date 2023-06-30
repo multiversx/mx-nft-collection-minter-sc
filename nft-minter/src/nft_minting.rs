@@ -165,9 +165,8 @@ pub trait NftMintingModule:
             let attributes =
                 self.build_nft_attributes(&brand_info.collection_hash, brand_id, nft_id);
             let nft_amount = BigUint::from(NFT_AMOUNT);
-            let mut nft_name = brand_info.token_display_name.clone();
-            nft_name.append_bytes(b"#");
-            nft_name.append_bytes(stringify!(nft_id).as_bytes());
+            let nft_name =
+                self.get_nft_name_with_tag(brand_info.token_display_name.clone(), nft_id);
             let nft_nonce = self.send().esdt_nft_create(
                 &nft_token_id,
                 &nft_amount,
@@ -188,5 +187,11 @@ pub trait NftMintingModule:
         self.send().direct_multi(to, &nft_output_payments);
 
         nft_output_payments
+    }
+
+    fn get_nft_name_with_tag(&self, name: ManagedBuffer, tag: usize) -> ManagedBuffer {
+        let mut nft_name = name;
+        nft_name.append(&sc_format!("#{}", tag));
+        nft_name
     }
 }
