@@ -165,10 +165,13 @@ pub trait NftMintingModule:
             let attributes =
                 self.build_nft_attributes(&brand_info.collection_hash, brand_id, nft_id);
             let nft_amount = BigUint::from(NFT_AMOUNT);
+            let mut nft_name = brand_info.token_display_name.clone();
+            nft_name.append_bytes(b"#");
+            nft_name.append_bytes(&nft_id.to_be_bytes());
             let nft_nonce = self.send().esdt_nft_create(
                 &nft_token_id,
                 &nft_amount,
-                &brand_info.token_display_name,
+                &nft_name,
                 &brand_info.royalties,
                 &ManagedBuffer::new(),
                 &attributes,
