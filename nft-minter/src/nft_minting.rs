@@ -191,7 +191,7 @@ pub trait NftMintingModule:
 
     fn get_nft_name_with_tag(&self, name: ManagedBuffer, tag: usize) -> ManagedBuffer {
         let mut nft_name = name;
-        nft_name.append(&sc_format!("#{}", tag));
+        nft_name.append(&sc_format!(" #{}", tag));
         nft_name
     }
 }
