@@ -35,7 +35,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         setMintWhitelistExpireTimestamp
         buyRandomNft
         giveawayNfts
-        repairNft
+        nftUpgrade
         getNftTiersForBrand
         nftIdOffsetForTier
         setRoyaltiesClaimAddress

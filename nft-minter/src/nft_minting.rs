@@ -129,8 +129,8 @@ pub trait NftMintingModule:
     }
 
     #[payable("*")]
-    #[endpoint(repairNft)]
-    fn repair_nft(&self, brand_id: BrandId<Self::Api>, tier: TierName<Self::Api>) {
+    #[endpoint(nftUpgrade)]
+    fn nft_upgrade(&self, brand_id: BrandId<Self::Api>, tier: TierName<Self::Api>) {
         let old_nft = self.call_value().single_esdt();
         let nft_token_id = self.nft_token(&brand_id).get_token_id();
         let nft_amount = BigUint::from(NFT_AMOUNT);

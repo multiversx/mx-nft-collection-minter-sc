@@ -264,7 +264,7 @@ where
         }
     }
 
-    pub fn call_repair_nft(
+    pub fn call_nft_upgrade(
         &mut self,
         buyer_address: &Address,
         payment_token: &[u8],
@@ -279,7 +279,7 @@ where
             payment_nonce,
             &rust_biguint!(1),
             |sc| {
-                sc.repair_nft(managed_buffer!(brand_id), managed_buffer!(tier));
+                sc.nft_upgrade(managed_buffer!(brand_id), managed_buffer!(tier));
             },
         )
     }

@@ -428,7 +428,7 @@ fn repair_nft_test() {
         &uris_to_vec(FIRST_URIS),
     );
     nm_setup
-        .call_repair_nft(
+        .call_nft_upgrade(
             &first_user_addr,
             FIRST_TOKEN_ID,
             2,
@@ -437,7 +437,7 @@ fn repair_nft_test() {
         )
         .assert_user_error("Unable to repair NFT");
     nm_setup
-        .call_repair_nft(
+        .call_nft_upgrade(
             &first_user_addr,
             FIRST_TOKEN_ID,
             1,
