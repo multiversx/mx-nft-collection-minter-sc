@@ -24,6 +24,8 @@ pub const FIRST_TOKEN_ID: &[u8] = b"FIRST-000000";
 pub const FIRST_TAGS: &[&[u8]] = &[b"funny", b"sad", b"memes"];
 pub const FIRST_TIERS: &[&[u8]] = &[b"gold", b"silver", b"bronze"];
 pub const FIRST_NFT_AMOUNTS: &[usize] = &[5, 10, 20];
+pub const FIRST_ATTRIBUTES: &[u8] = b"FirstAttributes";
+pub const FIRST_URIS: &[&[u8]] = &[b"FirstUri", b"SecondUri"];
 
 pub const SECOND_COLLECTION_HASH: &[u8; COLLECTION_HASH_LEN] =
     b"SecondCollection______________________________";

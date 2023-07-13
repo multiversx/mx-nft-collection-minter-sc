@@ -133,7 +133,11 @@ pub trait NftMintingModule:
     fn repair_nft(&self, brand_id: BrandId<Self::Api>, tier: TierName<Self::Api>) {
         let old_nft = self.call_value().single_esdt();
         let nft_token_id = self.nft_token(&brand_id).get_token_id();
-        require!(old_nft.token_identifier == nft_token_id, "Invalid payment");
+        let nft_amount = BigUint::from(NFT_AMOUNT);
+        require!(
+            old_nft.token_identifier == nft_token_id && old_nft.amount == nft_amount,
+            "Invalid payment"
+        );
 
         let nft_id = self.get_next_random_id(&brand_id, &tier);
         let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
@@ -153,7 +157,7 @@ pub trait NftMintingModule:
 
         let nft_nonce = self.send().esdt_nft_create(
             &old_nft.token_identifier,
-            &BigUint::from(1u64),
+            &nft_amount,
             &nft_name,
             &BigUint::from(ROYALTIES_REPAIR),
             &ManagedBuffer::new(),
@@ -161,19 +165,12 @@ pub trait NftMintingModule:
             &old_nft_data.uris,
         );
 
-        self.send().esdt_local_burn(
-            &old_nft.token_identifier,
-            old_nft.token_nonce,
-            &old_nft.amount,
-        );
+        self.send()
+            .esdt_local_burn(&old_nft.token_identifier, old_nft.token_nonce, &nft_amount);
         let caller = self.blockchain().get_caller();
 
-        self.send().direct_esdt(
-            &caller,
-            &old_nft.token_identifier,
-            nft_nonce,
-            &BigUint::from(1u64),
-        );
+        self.send()
+            .direct_esdt(&caller, &old_nft.token_identifier, nft_nonce, &nft_amount);
     }
 
     fn mint_and_send_random_nft(

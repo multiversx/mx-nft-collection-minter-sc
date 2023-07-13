@@ -3,7 +3,9 @@ pub mod nft_minter_interactor;
 
 use constants::*;
 use multiversx_sc::types::{ManagedBuffer, ManagedByteArray, MultiValueEncoded};
-use multiversx_sc_scenario::{managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi};
+use multiversx_sc_scenario::{
+    managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi,
+};
 use nft_minter::brand_creation::BrandCreationModule;
 use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod};
 use nft_minter::nft_attributes_builder::{NftAttributesBuilderModule, COLLECTION_HASH_LEN};
@@ -113,7 +115,7 @@ fn create_brands_test() {
             let mut expected_tier_info = Vec::new();
             for (tier, nft_amount) in FIRST_TIERS.iter().zip(FIRST_NFT_AMOUNTS.iter()) {
                 expected_tier_info.push(TierInfoEntry::<DebugApi> {
-                    tier: managed_buffer!(tier.clone()),
+                    tier: managed_buffer!(tier),
                     available_nfts: *nft_amount,
                     total_nfts: *nft_amount,
                     mint_price: MintPrice::<DebugApi> {
@@ -394,6 +396,57 @@ fn buy_whitelist_test() {
 }
 
 #[test]
+fn repair_nft_test() {
+    let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
+    let first_tier = FIRST_TIERS[0];
+    let first_user_addr = nm_setup.first_user_address.clone();
+
+    nm_setup.create_default_brands();
+
+    nm_setup.b_mock.set_nft_balance_all_properties(
+        &first_user_addr,
+        FIRST_TOKEN_ID,
+        1,
+        &rust_biguint!(1),
+        &FIRST_ATTRIBUTES.to_vec(),
+        7_700,
+        None,
+        None,
+        None,
+        &uris_to_vec(FIRST_URIS),
+    );
+    nm_setup.b_mock.set_nft_balance_all_properties(
+        &first_user_addr,
+        FIRST_TOKEN_ID,
+        2,
+        &rust_biguint!(1),
+        &FIRST_ATTRIBUTES.to_vec(),
+        900,
+        None,
+        None,
+        None,
+        &uris_to_vec(FIRST_URIS),
+    );
+    nm_setup
+        .call_repair_nft(
+            &first_user_addr,
+            FIRST_TOKEN_ID,
+            2,
+            FIRST_BRAND_ID,
+            first_tier,
+        )
+        .assert_user_error("Unable to repair NFT");
+    nm_setup
+        .call_repair_nft(
+            &first_user_addr,
+            FIRST_TOKEN_ID,
+            1,
+            FIRST_BRAND_ID,
+            first_tier,
+        )
+        .assert_ok();
+}
+#[test]
 fn giveaway_test() {
     let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
     nm_setup.create_default_brands();
@@ -601,4 +654,13 @@ fn formatters_test() {
 
 fn managed_buffer_to_string(buffer: &ManagedBuffer<DebugApi>) -> String {
     String::from_utf8(buffer.to_boxed_bytes().into_vec()).unwrap()
+}
+
+fn uris_to_vec(uris: &[&[u8]]) -> Vec<Vec<u8>> {
+    let mut out = Vec::new();
+    for uri in uris {
+        out.push((*uri).to_vec());
+    }
+
+    out
 }

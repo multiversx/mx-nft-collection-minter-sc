@@ -5,8 +5,8 @@ use multiversx_sc::{
 };
 use multiversx_sc_scenario::{
     managed_address, managed_biguint, managed_buffer, rust_biguint,
-    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
     whitebox::TxResult,
+    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
     DebugApi,
 };
 use nft_minter::brand_creation::BrandCreationModule;
@@ -17,7 +17,8 @@ use nft_minter::NftMinter;
 #[macro_export]
 macro_rules! managed_token_id {
     ($bytes:expr) => {{
-        if $bytes == multiversx_sc::types::EgldOrEsdtTokenIdentifier::<DebugApi>::EGLD_REPRESENTATION
+        if $bytes
+            == multiversx_sc::types::EgldOrEsdtTokenIdentifier::<DebugApi>::EGLD_REPRESENTATION
         {
             multiversx_sc::types::EgldOrEsdtTokenIdentifier::egld()
         } else {
@@ -120,12 +121,12 @@ where
         self.b_mock.set_esdt_local_roles(
             self.nm_wrapper.address_ref(),
             FIRST_TOKEN_ID,
-            &[EsdtLocalRole::NftCreate][..],
+            &[EsdtLocalRole::NftCreate, EsdtLocalRole::NftBurn][..],
         );
         self.b_mock.set_esdt_local_roles(
             self.nm_wrapper.address_ref(),
             SECOND_TOKEN_ID,
-            &[EsdtLocalRole::NftCreate][..],
+            &[EsdtLocalRole::NftCreate, EsdtLocalRole::NftBurn][..],
         );
     }
 
@@ -191,7 +192,7 @@ where
                 for (tier, nr_nfts) in tiers.iter().zip(nr_nfts_per_tier.iter()) {
                     tier_args.push(
                         (
-                            managed_buffer!(tier.clone()),
+                            managed_buffer!(tier),
                             *nr_nfts,
                             managed_biguint!(mint_price_amount),
                         )
@@ -261,6 +262,26 @@ where
                 },
             )
         }
+    }
+
+    pub fn call_repair_nft(
+        &mut self,
+        buyer_address: &Address,
+        payment_token: &[u8],
+        payment_nonce: u64,
+        brand_id: &[u8],
+        tier: &[u8],
+    ) -> TxResult {
+        self.b_mock.execute_esdt_transfer(
+            buyer_address,
+            &self.nm_wrapper,
+            payment_token,
+            payment_nonce,
+            &rust_biguint!(1),
+            |sc| {
+                sc.repair_nft(managed_buffer!(brand_id), managed_buffer!(tier));
+            },
+        )
     }
 
     pub fn call_giveaway(
