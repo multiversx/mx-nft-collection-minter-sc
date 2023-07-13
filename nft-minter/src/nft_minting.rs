@@ -155,6 +155,10 @@ pub trait NftMintingModule:
             "Unable to repair NFT"
         );
 
+        self.send()
+            .esdt_local_burn(&old_nft.token_identifier, old_nft.token_nonce, &nft_amount);
+        let caller = self.blockchain().get_caller();
+
         let nft_nonce = self.send().esdt_nft_create(
             &old_nft.token_identifier,
             &nft_amount,
@@ -164,10 +168,6 @@ pub trait NftMintingModule:
             &old_nft_data.attributes,
             &old_nft_data.uris,
         );
-
-        self.send()
-            .esdt_local_burn(&old_nft.token_identifier, old_nft.token_nonce, &nft_amount);
-        let caller = self.blockchain().get_caller();
 
         self.send()
             .direct_esdt(&caller, &old_nft.token_identifier, nft_nonce, &nft_amount);
