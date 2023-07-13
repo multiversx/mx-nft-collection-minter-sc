@@ -132,10 +132,8 @@ pub trait NftMintingModule:
     #[endpoint(repairNft)]
     fn repair_nft(&self, brand_id: BrandId<Self::Api>, tier: TierName<Self::Api>) {
         let old_nft = self.call_value().single_esdt();
-        require!(
-            old_nft.token_type() == EsdtTokenType::NonFungible,
-            "Invalid payment"
-        );
+        let nft_token_id = self.nft_token(&brand_id).get_token_id();
+        require!(old_nft.token_identifier == nft_token_id, "Invalid payment");
 
         let nft_id = self.get_next_random_id(&brand_id, &tier);
         let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
