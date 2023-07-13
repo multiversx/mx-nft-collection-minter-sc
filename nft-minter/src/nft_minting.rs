@@ -7,6 +7,7 @@ use crate::{
 };
 
 const NFT_AMOUNT: u32 = 1;
+const ROYALTIES_THRESHOLD: u64 = 1_000;
 
 #[multiversx_sc::module]
 pub trait NftMintingModule:
@@ -124,6 +125,56 @@ pub trait NftMintingModule:
         }
 
         self.nft_giveaway_event(&brand_id, &tier, total);
+    }
+
+    #[payable("*")]
+    #[endpoint(repairNft)]
+    fn repair_nft(&self, brand_id: BrandId<Self::Api>, tier: TierName<Self::Api>) {
+        let old_nft = self.call_value().single_esdt();
+        require!(
+            old_nft.token_type() == EsdtTokenType::NonFungible,
+            "Invalid payment"
+        );
+
+        let nft_id = self.get_next_random_id(&brand_id, &tier);
+        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
+        let nft_name = self.get_nft_name_with_tag(brand_info.token_display_name.clone(), nft_id);
+
+        let sc_address = self.blockchain().get_sc_address();
+        let old_nft_data = self.blockchain().get_esdt_token_data(
+            &sc_address,
+            &old_nft.token_identifier,
+            old_nft.token_nonce,
+        );
+
+        require!(
+            old_nft_data.royalties > ROYALTIES_THRESHOLD,
+            "Unable to repair NFT"
+        );
+
+        let nft_nonce = self.send().esdt_nft_create(
+            &old_nft.token_identifier,
+            &BigUint::from(1u64),
+            &nft_name,
+            &brand_info.royalties,
+            &ManagedBuffer::new(),
+            &old_nft_data.attributes,
+            &old_nft_data.uris,
+        );
+
+        self.send().esdt_local_burn(
+            &old_nft.token_identifier,
+            old_nft.token_nonce,
+            &old_nft.amount,
+        );
+        let caller = self.blockchain().get_caller();
+
+        self.send().direct_esdt(
+            &caller,
+            &old_nft.token_identifier,
+            nft_nonce,
+            &BigUint::from(1u64),
+        );
     }
 
     fn mint_and_send_random_nft(
