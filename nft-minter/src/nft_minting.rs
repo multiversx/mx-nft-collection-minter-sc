@@ -139,7 +139,7 @@ pub trait NftMintingModule:
 
         let nft_id = self.get_next_random_id(&brand_id, &tier);
         let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
-        let nft_name = self.get_nft_name_with_tag(brand_info.token_display_name.clone(), nft_id);
+        let nft_name = self.get_nft_name_with_tag(brand_info.token_display_name, nft_id);
 
         let sc_address = self.blockchain().get_sc_address();
         let old_nft_data = self.blockchain().get_esdt_token_data(
