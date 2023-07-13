@@ -8,6 +8,7 @@ use crate::{
 
 const NFT_AMOUNT: u32 = 1;
 const ROYALTIES_THRESHOLD: u64 = 1_000;
+const ROYALTIES_REPAIR: u64 = 770;
 
 #[multiversx_sc::module]
 pub trait NftMintingModule:
@@ -156,7 +157,7 @@ pub trait NftMintingModule:
             &old_nft.token_identifier,
             &BigUint::from(1u64),
             &nft_name,
-            &brand_info.royalties,
+            &BigUint::from(ROYALTIES_REPAIR),
             &ManagedBuffer::new(),
             &old_nft_data.attributes,
             &old_nft_data.uris,
