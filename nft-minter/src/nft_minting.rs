@@ -152,7 +152,7 @@ pub trait NftMintingModule:
 
         require!(
             old_nft_data.royalties > ROYALTIES_THRESHOLD,
-            "Unable to repair NFT"
+            "Unable to upgrade NFT"
         );
 
         self.send()

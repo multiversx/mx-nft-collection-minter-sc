@@ -396,7 +396,7 @@ fn buy_whitelist_test() {
 }
 
 #[test]
-fn repair_nft_test() {
+fn upgrade_nft_test() {
     let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
     let first_tier = FIRST_TIERS[0];
     let first_user_addr = nm_setup.first_user_address.clone();
@@ -435,7 +435,7 @@ fn repair_nft_test() {
             FIRST_BRAND_ID,
             first_tier,
         )
-        .assert_user_error("Unable to repair NFT");
+        .assert_user_error("Unable to upgrade NFT");
     nm_setup
         .call_nft_upgrade(
             &first_user_addr,
