@@ -398,7 +398,6 @@ fn buy_whitelist_test() {
 #[test]
 fn upgrade_nft_test() {
     let mut nm_setup = NftMinterSetup::new(nft_minter::contract_obj);
-    let first_tier = FIRST_TIERS[0];
     let first_user_addr = nm_setup.first_user_address.clone();
 
     nm_setup.create_default_brands();
@@ -428,22 +427,10 @@ fn upgrade_nft_test() {
         &uris_to_vec(FIRST_URIS),
     );
     nm_setup
-        .call_nft_upgrade(
-            &first_user_addr,
-            FIRST_TOKEN_ID,
-            2,
-            FIRST_BRAND_ID,
-            first_tier,
-        )
+        .call_nft_upgrade(&first_user_addr, FIRST_TOKEN_ID, 2, FIRST_BRAND_ID)
         .assert_user_error("Unable to upgrade NFT");
     nm_setup
-        .call_nft_upgrade(
-            &first_user_addr,
-            FIRST_TOKEN_ID,
-            1,
-            FIRST_BRAND_ID,
-            first_tier,
-        )
+        .call_nft_upgrade(&first_user_addr, FIRST_TOKEN_ID, 1, FIRST_BRAND_ID)
         .assert_ok();
 }
 #[test]

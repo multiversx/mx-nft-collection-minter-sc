@@ -130,7 +130,7 @@ pub trait NftMintingModule:
 
     #[payable("*")]
     #[endpoint(nftUpgrade)]
-    fn nft_upgrade(&self, brand_id: BrandId<Self::Api>, tier: TierName<Self::Api>) {
+    fn nft_upgrade(&self, brand_id: BrandId<Self::Api>) {
         let old_nft = self.call_value().single_esdt();
         let nft_token_id = self.nft_token(&brand_id).get_token_id();
         let nft_amount = BigUint::from(NFT_AMOUNT);
@@ -138,10 +138,6 @@ pub trait NftMintingModule:
             old_nft.token_identifier == nft_token_id && old_nft.amount == nft_amount,
             "Invalid payment"
         );
-
-        let nft_id = self.get_next_random_id(&brand_id, &tier);
-        let brand_info: BrandInfo<Self::Api> = self.brand_info(&brand_id).get();
-        let nft_name = self.get_nft_name_with_tag(brand_info.token_display_name, nft_id);
 
         let sc_address = self.blockchain().get_sc_address();
         let old_nft_data = self.blockchain().get_esdt_token_data(
@@ -162,7 +158,7 @@ pub trait NftMintingModule:
         let nft_nonce = self.send().esdt_nft_create(
             &old_nft.token_identifier,
             &nft_amount,
-            &nft_name,
+            &old_nft_data.name,
             &BigUint::from(ROYALTIES_REPAIR),
             &ManagedBuffer::new(),
             &old_nft_data.attributes,

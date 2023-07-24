@@ -270,7 +270,6 @@ where
         payment_token: &[u8],
         payment_nonce: u64,
         brand_id: &[u8],
-        tier: &[u8],
     ) -> TxResult {
         self.b_mock.execute_esdt_transfer(
             buyer_address,
@@ -279,7 +278,7 @@ where
             payment_nonce,
             &rust_biguint!(1),
             |sc| {
-                sc.nft_upgrade(managed_buffer!(brand_id), managed_buffer!(tier));
+                sc.nft_upgrade(managed_buffer!(brand_id));
             },
         )
     }
