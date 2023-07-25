@@ -402,21 +402,27 @@ fn upgrade_nft_test() {
 
     nm_setup.create_default_brands();
 
+    let first_tier = SECOND_TIERS[0];
+
+    nm_setup
+        .call_giveaway(
+            SECOND_BRAND_ID,
+            first_tier,
+            [(first_user_addr.clone(), 10)].to_vec(),
+        )
+        .assert_ok(); // mint all tier 1 NFT's and send them to first user
+
+    nm_setup
+        .call_giveaway(
+            SECOND_BRAND_ID,
+            first_tier,
+            [(first_user_addr.clone(), 1)].to_vec(),
+        )
+        .assert_user_error("Not enough NFTs available"); // make sure there are no more NFTs left to mint on that tier
+
     nm_setup.b_mock.set_nft_balance_all_properties(
         &first_user_addr,
-        FIRST_TOKEN_ID,
-        1,
-        &rust_biguint!(1),
-        &FIRST_ATTRIBUTES.to_vec(),
-        7_700,
-        None,
-        None,
-        None,
-        &uris_to_vec(FIRST_URIS),
-    );
-    nm_setup.b_mock.set_nft_balance_all_properties(
-        &first_user_addr,
-        FIRST_TOKEN_ID,
+        SECOND_TOKEN_ID,
         2,
         &rust_biguint!(1),
         &FIRST_ATTRIBUTES.to_vec(),
@@ -425,12 +431,26 @@ fn upgrade_nft_test() {
         None,
         None,
         &uris_to_vec(FIRST_URIS),
-    );
+    ); // make sure NFT with nonce 2 will fail upgrade due to low royalties
     nm_setup
-        .call_nft_upgrade(&first_user_addr, FIRST_TOKEN_ID, 2, FIRST_BRAND_ID)
+        .call_nft_upgrade(&first_user_addr, SECOND_TOKEN_ID, 2, SECOND_BRAND_ID)
         .assert_user_error("Unable to upgrade NFT");
+
+    nm_setup.b_mock.set_nft_balance_all_properties(
+        &first_user_addr,
+        SECOND_TOKEN_ID,
+        5,
+        &rust_biguint!(1),
+        &FIRST_ATTRIBUTES.to_vec(),
+        7_700,
+        None,
+        None,
+        None,
+        &uris_to_vec(FIRST_URIS),
+    ); // make sure NFT with nonce 5 will pass upgrade due to low royalties
+
     nm_setup
-        .call_nft_upgrade(&first_user_addr, FIRST_TOKEN_ID, 1, FIRST_BRAND_ID)
+        .call_nft_upgrade(&first_user_addr, SECOND_TOKEN_ID, 5, SECOND_BRAND_ID)
         .assert_ok();
 }
 #[test]
