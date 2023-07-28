@@ -86,7 +86,7 @@ fn test_nft_minter_deployer() {
         .assert_ok();
     b_mock
         .execute_tx(&user, &nft_minter_wrapper, &rust_zero, |sc| {
-            assert_eq!(sc.is_paused(), true);
+            assert!(sc.is_paused());
         })
         .assert_ok();
 
@@ -98,7 +98,7 @@ fn test_nft_minter_deployer() {
         .assert_ok();
     b_mock
         .execute_tx(&user, &nft_minter_wrapper, &rust_zero, |sc| {
-            assert_eq!(sc.is_paused(), false);
+            assert!(!sc.is_paused());
         })
         .assert_ok();
 
@@ -106,10 +106,7 @@ fn test_nft_minter_deployer() {
     let user2 = b_mock.create_user_account(&rust_zero);
     b_mock
         .execute_tx(&user, &nft_minter_wrapper, &rust_zero, |sc| {
-            assert_eq!(
-                sc.admin_whitelist().contains(&managed_address!(&user2)),
-                false
-            );
+            assert!(!sc.admin_whitelist().contains(&managed_address!(&user2)));
         })
         .assert_ok();
     b_mock
@@ -122,10 +119,7 @@ fn test_nft_minter_deployer() {
         .assert_ok();
     b_mock
         .execute_tx(&user, &nft_minter_wrapper, &rust_zero, |sc| {
-            assert_eq!(
-                sc.admin_whitelist().contains(&managed_address!(&user2)),
-                true
-            );
+            assert!(sc.admin_whitelist().contains(&managed_address!(&user2)));
         })
         .assert_ok();
 
