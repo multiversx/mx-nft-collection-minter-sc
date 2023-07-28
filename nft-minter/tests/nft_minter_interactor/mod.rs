@@ -67,6 +67,7 @@ where
                     managed_address!(&owner_address),
                     managed_address!(&owner_address),
                     MAX_NFTS_PER_TX,
+                    OptionalValue::None
                 );
             })
             .assert_ok();
@@ -191,7 +192,7 @@ where
                 for (tier, nr_nfts) in tiers.iter().zip(nr_nfts_per_tier.iter()) {
                     tier_args.push(
                         (
-                            managed_buffer!(tier.clone()),
+                            managed_buffer!(tier),
                             *nr_nfts,
                             managed_biguint!(mint_price_amount),
                         )

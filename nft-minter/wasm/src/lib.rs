@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           30
+// Endpoints:                           33
 // Async Callback:                       1
-// Total number of exported functions:  32
+// Total number of exported functions:  35
 
 #![no_std]
 #![feature(lang_items)]
@@ -48,6 +48,9 @@ multiversx_sc_wasm_adapter::endpoints! {
         claimRoyaltiesFromMarketplace
         getBrandInfo
         getAllBrandsInfo
+        pause
+        unpause
+        isPaused
         callBack
     )
 }

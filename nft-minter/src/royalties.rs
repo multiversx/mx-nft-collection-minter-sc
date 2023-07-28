@@ -1,9 +1,11 @@
 multiversx_sc::imports!();
 
+use multiversx_sc_modules::pause;
+
 use crate::common_storage::EgldValuePaymentsVecPair;
 
 #[multiversx_sc::module]
-pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
+pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule + pause::PauseModule {
     #[endpoint(setRoyaltiesClaimAddress)]
     fn set_royalties_claim_address(&self, new_address: ManagedAddress) {
         self.require_caller_is_admin();
@@ -18,6 +20,7 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
 
     #[endpoint(claimRoyalties)]
     fn claim_royalties(&self) -> EgldValuePaymentsVecPair<Self::Api> {
+        self.require_not_paused();
         let royalties_claim_address = self.royalties_claim_address().get();
         let mut mapper = self.accumulated_royalties();
 
@@ -26,6 +29,7 @@ pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule {
 
     #[endpoint(claimMintPayments)]
     fn claim_mint_payments(&self) -> EgldValuePaymentsVecPair<Self::Api> {
+        self.require_not_paused();
         let mint_payments_claim_address = self.mint_payments_claim_address().get();
         let mut mapper = self.accumulated_mint_payments();
 

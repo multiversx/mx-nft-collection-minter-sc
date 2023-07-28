@@ -1,5 +1,7 @@
 multiversx_sc::imports!();
 
+use multiversx_sc_modules::pause;
+
 use crate::{
     brand_creation::{INVALID_BRAND_ID_ERR_MSG, INVALID_TIER_ERR_MSG},
     common_storage::{BrandId, BrandInfo, PaymentsVec},
@@ -16,6 +18,7 @@ pub trait NftMintingModule:
     + crate::admin_whitelist::AdminWhitelistModule
     + crate::nft_attributes_builder::NftAttributesBuilderModule
     + crate::events::EventsModule
+    + pause::PauseModule
 {
     #[payable("*")]
     #[endpoint(buyRandomNft)]
@@ -25,6 +28,7 @@ pub trait NftMintingModule:
         tier: TierName<Self::Api>,
         opt_nfts_to_buy: OptionalValue<usize>,
     ) -> PaymentsVec<Self::Api> {
+        self.require_not_paused();
         require!(
             self.registered_brands().contains(&brand_id),
             INVALID_BRAND_ID_ERR_MSG
@@ -97,6 +101,7 @@ pub trait NftMintingModule:
         dest_amount_pairs: MultiValueEncoded<MultiValue2<ManagedAddress, usize>>,
     ) {
         self.require_caller_is_admin();
+        self.require_not_paused();
 
         require!(
             self.registered_brands().contains(&brand_id),

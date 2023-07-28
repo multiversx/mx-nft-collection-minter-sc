@@ -1,0 +1,21 @@
+[package]
+name = "nft-minter-deployer"
+version = "0.0.0"
+authors = ["MultiversX <contact@multiversx.com>"]
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies.nft-minter]
+path = "../nft-minter"
+
+[dependencies.multiversx-sc]
+version = "=0.41.3"
+
+[dependencies.multiversx-sc-modules]
+version = "0.41.3"
+
+[dev-dependencies.multiversx-sc-scenario]
+version = "0.41.3"

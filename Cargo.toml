@@ -2,6 +2,8 @@
 members = [
   "nft-minter",
   "nft-minter/meta",
+  "nft-minter-deployer",
+  "nft-minter-deployer/meta",
   "royalties-handler",
   "royalties-handler/meta",
   "esdt-system-sc-mock",

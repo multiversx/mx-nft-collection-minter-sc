@@ -16,7 +16,7 @@ pub trait NftMinterInteractorModule:
             "Already claimed this epoch"
         );
 
-        self.last_claim_epoch().set(&current_epoch);
+        self.last_claim_epoch().set(current_epoch);
 
         let sc_address = self.nft_minter_sc_address().get();
 
