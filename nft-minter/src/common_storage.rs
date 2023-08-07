@@ -34,10 +34,6 @@ pub struct MintPrice<M: ManagedTypeApi> {
 
 #[multiversx_sc::module]
 pub trait CommonStorageModule {
-    #[view(getCollectionsCategory)]
-    #[storage_mapper("collectionsCategory")]
-    fn collections_category(&self) -> SingleValueMapper<ManagedBuffer>;
-
     #[view(getMaxNftsPerTransaction)]
     #[storage_mapper("maxNftsPerTransaction")]
     fn max_nfts_per_transaction(&self) -> SingleValueMapper<usize>;

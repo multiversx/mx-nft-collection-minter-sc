@@ -1,7 +1,7 @@
 use multiversx_sc::{codec::multi_types::OptionalValue, types::Address};
 use multiversx_sc_modules::pause::PauseModule;
 use multiversx_sc_scenario::{
-    managed_address, managed_buffer, rust_biguint, testing_framework::BlockchainStateWrapper,
+    managed_address, rust_biguint, testing_framework::BlockchainStateWrapper,
 };
 use nft_minter::{admin_whitelist::AdminWhitelistModule, NftMinter};
 use nft_minter_deployer::{factory::FactoryModule, NftMinterDeployer};
@@ -9,7 +9,6 @@ use nft_minter_deployer::{factory::FactoryModule, NftMinterDeployer};
 pub const NFT_MINTER_WASM_PATH: &str = "nft-minter/output/nft-minter.wasm";
 pub const NFT_MINTER_DEPLOYER_WASM_PATH: &str =
     "nft-minter-deployer/output/nft-minter-deployer.wasm";
-pub const CATEGORY: &[u8] = b"VeryCoolNfts";
 pub const MAX_NFTS_PER_TX: usize = 2;
 
 #[test]
@@ -37,7 +36,6 @@ fn test_nft_minter_deployer() {
     b_mock
         .execute_tx(&owner, &nft_minter_template_wrapper, &rust_zero, |sc| {
             sc.init(
-                managed_buffer!(CATEGORY),
                 managed_address!(&user),
                 managed_address!(&user),
                 MAX_NFTS_PER_TX,
@@ -65,7 +63,6 @@ fn test_nft_minter_deployer() {
     b_mock
         .execute_tx(&user, &nft_minter_deployer_wrapper, &rust_zero, |sc| {
             let new_nft_minter_address = sc.create_nft_minter_endpoint(
-                managed_buffer!(CATEGORY),
                 managed_address!(&user),
                 managed_address!(&user),
                 MAX_NFTS_PER_TX,
@@ -127,7 +124,6 @@ fn test_nft_minter_deployer() {
         .execute_tx(&owner, &nft_minter_deployer_wrapper, &rust_zero, |sc| {
             sc.upgrade_nft_minter_endpoint(
                 managed_address!(&user_nft_minter_address),
-                managed_buffer!(CATEGORY),
                 managed_address!(&user),
                 managed_address!(&user),
                 MAX_NFTS_PER_TX,

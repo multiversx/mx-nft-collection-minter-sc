@@ -3,7 +3,6 @@ multiversx_sc::derive_imports!();
 
 #[derive(TypeAbi, TopEncode)]
 pub struct CreateNftMinterEvent<M: ManagedTypeApi> {
-    collections_category: ManagedBuffer<M>,
     royalties_claim_address: ManagedAddress<M>,
     mint_payments_claim_address: ManagedAddress<M>,
     max_nfts_per_transaction: usize,
@@ -15,7 +14,6 @@ pub trait EventsModule {
     fn emit_create_nft_minter_event(
         self,
         caller: ManagedAddress,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
@@ -27,7 +25,6 @@ pub trait EventsModule {
             self.blockchain().get_block_nonce(),
             self.blockchain().get_block_timestamp(),
             CreateNftMinterEvent {
-                collections_category,
                 royalties_claim_address,
                 mint_payments_claim_address,
                 max_nfts_per_transaction,
@@ -39,7 +36,6 @@ pub trait EventsModule {
     fn emit_upgrade_nft_minter_event(
         self,
         caller: ManagedAddress,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
@@ -51,7 +47,6 @@ pub trait EventsModule {
             self.blockchain().get_block_nonce(),
             self.blockchain().get_block_timestamp(),
             CreateNftMinterEvent {
-                collections_category,
                 royalties_claim_address,
                 mint_payments_claim_address,
                 max_nfts_per_transaction,

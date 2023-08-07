@@ -25,7 +25,6 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
     #[endpoint(createNftMinter)]
     fn create_nft_minter_endpoint(
         &self,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
@@ -45,7 +44,6 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
         );
 
         let nft_minter_address = self.create_nft_minter(
-            collections_category.clone(),
             royalties_claim_address.clone(),
             mint_payments_claim_address.clone(),
             max_nfts_per_transaction,
@@ -54,7 +52,6 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
 
         self.emit_create_nft_minter_event(
             caller,
-            collections_category,
             royalties_claim_address,
             mint_payments_claim_address,
             max_nfts_per_transaction,
@@ -69,7 +66,6 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
     fn upgrade_nft_minter_endpoint(
         &self,
         nft_minter_address: ManagedAddress,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
@@ -82,7 +78,6 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
 
         self.upgrade_nft_minter(
             nft_minter_address.clone(),
-            collections_category.clone(),
             royalties_claim_address.clone(),
             mint_payments_claim_address.clone(),
             max_nfts_per_transaction,
@@ -90,7 +85,6 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
 
         self.emit_upgrade_nft_minter_event(
             self.blockchain().get_caller(),
-            collections_category,
             royalties_claim_address,
             mint_payments_claim_address,
             max_nfts_per_transaction,
