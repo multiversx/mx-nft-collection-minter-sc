@@ -32,13 +32,11 @@ pub trait NftMinter:
     #[init]
     fn init(
         &self,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
         opt_admin: OptionalValue<ManagedAddress>,
     ) {
-        self.collections_category().set(&collections_category);
         self.royalties_claim_address().set(&royalties_claim_address);
         self.mint_payments_claim_address()
             .set(&mint_payments_claim_address);

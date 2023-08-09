@@ -64,7 +64,6 @@ where
         b_mock
             .execute_tx(&owner_address, &nm_wrapper, &rust_zero, |sc| {
                 sc.init(
-                    managed_buffer!(CATEGORY),
                     managed_address!(&owner_address),
                     managed_address!(&owner_address),
                     1_000,

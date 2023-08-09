@@ -5,7 +5,6 @@ multiversx_sc::derive_imports!();
 pub trait FactoryModule {
     fn create_nft_minter(
         &self,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
@@ -18,7 +17,6 @@ pub trait FactoryModule {
         let (new_address, ()) = self
             .nft_minter_contract_proxy()
             .init(
-                collections_category,
                 royalties_claim_address,
                 mint_payments_claim_address,
                 max_nfts_per_transaction,
@@ -39,7 +37,6 @@ pub trait FactoryModule {
     fn upgrade_nft_minter(
         &self,
         nft_minter_address: ManagedAddress,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
@@ -47,7 +44,6 @@ pub trait FactoryModule {
         self.nft_minter_contract_proxy()
             .contract(nft_minter_address)
             .init(
-                collections_category,
                 royalties_claim_address,
                 mint_payments_claim_address,
                 max_nfts_per_transaction,
