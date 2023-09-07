@@ -9,8 +9,6 @@ use nft_minter::admin_whitelist::ProxyTrait as _;
 mod events;
 pub mod factory;
 
-const MAX_DEPLOYS_PER_USER: usize = 50;
-
 #[multiversx_sc::contract]
 pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
     #[init]
@@ -38,10 +36,6 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
                 "NFT minter creation is disabled"
             );
         }
-        require!(
-            self.user_nft_minter_contracts(&caller).len() < MAX_DEPLOYS_PER_USER,
-            "Cannot exceed the maximum number of deploys allowed per user"
-        );
 
         let nft_minter_address = self.create_nft_minter(
             royalties_claim_address.clone(),
