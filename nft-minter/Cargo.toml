@@ -15,6 +15,9 @@ num-bigint = "0.4.2"
 num-traits = "0.2"
 hex = "0.4"
 
+[dependencies.multiversx-sc-modules]
+version = "0.41.3"
+
 [dev-dependencies.esdt-system-sc-mock]
 path = "../esdt-system-sc-mock"
 

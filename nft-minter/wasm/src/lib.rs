@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           30
+// Endpoints:                           32
 // Async Callback:                       1
-// Total number of exported functions:  32
+// Total number of exported functions:  34
 
 #![no_std]
 #![feature(lang_items)]
@@ -19,7 +19,6 @@ multiversx_sc_wasm_adapter::endpoints! {
     nft_minter
     (
         setMaxNftsPerTransaction
-        getCollectionsCategory
         getMaxNftsPerTransaction
         getRegisterdCollectionHashes
         getRegisteredBrands
@@ -48,6 +47,9 @@ multiversx_sc_wasm_adapter::endpoints! {
         claimRoyaltiesFromMarketplace
         getBrandInfo
         getAllBrandsInfo
+        pause
+        unpause
+        isPaused
         callBack
     )
 }
