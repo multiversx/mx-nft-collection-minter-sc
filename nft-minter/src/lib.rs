@@ -47,6 +47,9 @@ pub trait NftMinter:
         }
     }
 
+    #[endpoint]
+    fn upgrade(&self) {}
+
     #[only_owner]
     #[endpoint(setMaxNftsPerTransaction)]
     fn set_max_nfts_per_transaction(&self, max: usize) {
