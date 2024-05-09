@@ -1,6 +1,7 @@
 multiversx_sc::imports!();
 
-use crate::common_storage::{self, EgldValuePaymentsVecPair};
+use crate::brand_creation::ROYALTIES_MAX;
+use crate::common_storage::{self, BrandId, EgldValuePaymentsVecPair};
 
 #[multiversx_sc::module]
 pub trait RoyaltiesModule:
@@ -12,13 +13,8 @@ pub trait RoyaltiesModule:
         self.royalties_claim_address().set(&new_address);
     }
 
-    #[only_admin]
     #[endpoint(changeRoyaltiesForBrand)]
-    fn change_royalties_for_brand(
-        &self,
-        brand_id: &CollectionHash<Self::Api>,
-        new_royalties: BigUint,
-    ) {
+    fn change_royalties_for_brand(&self, brand_id: &BrandId<Self::Api>, new_royalties: BigUint) {
         self.require_caller_is_admin();
         require!(
             new_royalties <= ROYALTIES_MAX,

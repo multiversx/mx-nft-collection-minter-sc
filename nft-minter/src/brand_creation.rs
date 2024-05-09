@@ -8,7 +8,7 @@ use crate::{
 };
 
 const NFT_ISSUE_COST: u64 = 50_000_000_000_000_000; // 0.05 EGLD
-const ROYALTIES_MAX: u32 = 10_000; // 100%
+pub const ROYALTIES_MAX: u32 = 10_000; // 100%
 const ISSUE_AND_CALLBACK_COST: u64 = 55_000_000;
 
 const MAX_BRAND_ID_LEN: usize = 50;
