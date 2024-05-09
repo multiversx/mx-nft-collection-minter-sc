@@ -21,7 +21,7 @@ pub trait RoyaltiesModule:
     fn change_royalties_for_brand(&self, brand_id: &BrandId<Self::Api>, new_royalties: BigUint) {
         self.require_caller_is_admin();
         let brand_exists = self.registered_brands().contains(brand_id);
-        require!(!brand_exists, "Brand doesn't exist");
+        require!(brand_exists, "Brand doesn't exist");
         require!(
             new_royalties <= ROYALTIES_MAX,
             "Royalties cannot be over 100%"
