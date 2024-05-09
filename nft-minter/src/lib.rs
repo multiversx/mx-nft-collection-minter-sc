@@ -47,6 +47,24 @@ pub trait NftMinter:
         }
     }
 
+    #[upgrade]
+    fn upgrade(
+        &self,
+        royalties_claim_address: ManagedAddress,
+        mint_payments_claim_address: ManagedAddress,
+        max_nfts_per_transaction: usize,
+        opt_admin: OptionalValue<ManagedAddress>,
+    ) {
+        self.royalties_claim_address().set(&royalties_claim_address);
+        self.mint_payments_claim_address()
+            .set(&mint_payments_claim_address);
+        self.set_max_nfts_per_transaction(max_nfts_per_transaction);
+
+        if let OptionalValue::Some(admin) = opt_admin {
+            self.add_user_to_admin_list(admin);
+        }
+    }
+
     #[only_owner]
     #[endpoint(setMaxNftsPerTransaction)]
     fn set_max_nfts_per_transaction(&self, max: usize) {

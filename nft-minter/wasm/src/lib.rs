@@ -5,9 +5,10 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
+// Upgrade:                              1
 // Endpoints:                           33
 // Async Callback:                       1
-// Total number of exported functions:  35
+// Total number of exported functions:  36
 
 #![no_std]
 #![allow(internal_features)]
@@ -20,6 +21,7 @@ multiversx_sc_wasm_adapter::endpoints! {
     nft_minter
     (
         init => init
+        upgrade => upgrade
         setMaxNftsPerTransaction => set_max_nfts_per_transaction
         getMaxNftsPerTransaction => max_nfts_per_transaction
         getRegisterdCollectionHashes => registered_collection_hashes
