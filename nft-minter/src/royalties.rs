@@ -7,7 +7,9 @@ use crate::common_storage::{self, BrandId, EgldValuePaymentsVecPair};
 
 #[multiversx_sc::module]
 pub trait RoyaltiesModule:
-    ::AdminWhitelistModule + pause::PauseModule + common_storage::CommonStorageModule
+    crate::admin_whitelist::AdminWhitelistModule
+    + pause::PauseModule
+    + common_storage::CommonStorageModule
 {
     #[endpoint(setRoyaltiesClaimAddress)]
     fn set_royalties_claim_address(&self, new_address: ManagedAddress) {
