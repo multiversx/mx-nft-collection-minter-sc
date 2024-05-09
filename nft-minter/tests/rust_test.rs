@@ -113,7 +113,7 @@ fn create_brands_test() {
             let mut expected_tier_info = Vec::new();
             for (tier, nft_amount) in FIRST_TIERS.iter().zip(FIRST_NFT_AMOUNTS.iter()) {
                 expected_tier_info.push(TierInfoEntry::<DebugApi> {
-                    tier: managed_buffer!(tier.clone()),
+                    tier: managed_buffer!(tier),
                     available_nfts: *nft_amount,
                     total_nfts: *nft_amount,
                     mint_price: MintPrice::<DebugApi> {

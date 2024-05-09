@@ -5,8 +5,8 @@ use multiversx_sc::{
 };
 use multiversx_sc_scenario::{
     managed_address, managed_biguint, managed_buffer, rust_biguint,
-    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
     whitebox::TxResult,
+    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
     DebugApi,
 };
 use nft_minter::brand_creation::BrandCreationModule;
@@ -17,7 +17,8 @@ use nft_minter::NftMinter;
 #[macro_export]
 macro_rules! managed_token_id {
     ($bytes:expr) => {{
-        if $bytes == multiversx_sc::types::EgldOrEsdtTokenIdentifier::<DebugApi>::EGLD_REPRESENTATION
+        if $bytes
+            == multiversx_sc::types::EgldOrEsdtTokenIdentifier::<DebugApi>::EGLD_REPRESENTATION
         {
             multiversx_sc::types::EgldOrEsdtTokenIdentifier::egld()
         } else {
@@ -63,10 +64,10 @@ where
         b_mock
             .execute_tx(&owner_address, &nm_wrapper, &rust_zero, |sc| {
                 sc.init(
-                    managed_buffer!(CATEGORY),
                     managed_address!(&owner_address),
                     managed_address!(&owner_address),
                     MAX_NFTS_PER_TX,
+                    OptionalValue::None,
                 );
             })
             .assert_ok();
@@ -191,7 +192,7 @@ where
                 for (tier, nr_nfts) in tiers.iter().zip(nr_nfts_per_tier.iter()) {
                     tier_args.push(
                         (
-                            managed_buffer!(tier.clone()),
+                            managed_buffer!(tier),
                             *nr_nfts,
                             managed_biguint!(mint_price_amount),
                         )

@@ -1,5 +1,7 @@
 multiversx_sc::imports!();
 
+use multiversx_sc_modules::pause;
+
 use crate::common_storage::EgldValuePaymentsVecPair;
 
 pub mod nft_marketplace_proxy {
@@ -18,7 +20,7 @@ pub mod nft_marketplace_proxy {
 
 #[multiversx_sc::module]
 pub trait NftMarketplaceInteractorModule:
-    crate::royalties::RoyaltiesModule + crate::admin_whitelist::AdminWhitelistModule
+    crate::royalties::RoyaltiesModule + crate::admin_whitelist::AdminWhitelistModule + pause::PauseModule
 {
     #[endpoint(claimRoyaltiesFromMarketplace)]
     fn claim_royalties_from_marketplace(
@@ -27,6 +29,7 @@ pub trait NftMarketplaceInteractorModule:
         tokens: MultiValueEncoded<EgldOrEsdtTokenIdentifier>,
     ) {
         self.require_caller_is_admin();
+        self.require_not_paused();
 
         let mut args = MultiValueEncoded::new();
         for token in tokens {

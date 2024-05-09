@@ -1,11 +1,13 @@
 multiversx_sc::imports!();
 
+use multiversx_sc_modules::pause;
+
 use crate::brand_creation::ROYALTIES_MAX;
 use crate::common_storage::{self, BrandId, EgldValuePaymentsVecPair};
 
 #[multiversx_sc::module]
 pub trait RoyaltiesModule:
-    crate::admin_whitelist::AdminWhitelistModule + common_storage::CommonStorageModule
+    ::AdminWhitelistModule + pause::PauseModule + common_storage::CommonStorageModule
 {
     #[endpoint(setRoyaltiesClaimAddress)]
     fn set_royalties_claim_address(&self, new_address: ManagedAddress) {
@@ -32,6 +34,7 @@ pub trait RoyaltiesModule:
 
     #[endpoint(claimRoyalties)]
     fn claim_royalties(&self) -> EgldValuePaymentsVecPair<Self::Api> {
+        self.require_not_paused();
         let royalties_claim_address = self.royalties_claim_address().get();
         let mut mapper = self.accumulated_royalties();
 
@@ -40,6 +43,7 @@ pub trait RoyaltiesModule:
 
     #[endpoint(claimMintPayments)]
     fn claim_mint_payments(&self) -> EgldValuePaymentsVecPair<Self::Api> {
+        self.require_not_paused();
         let mint_payments_claim_address = self.mint_payments_claim_address().get();
         let mut mapper = self.accumulated_mint_payments();
 

@@ -13,6 +13,8 @@ pub mod nft_tier;
 pub mod royalties;
 pub mod views;
 
+use multiversx_sc_modules::pause;
+
 #[multiversx_sc::contract]
 pub trait NftMinter:
     common_storage::CommonStorageModule
@@ -25,20 +27,24 @@ pub trait NftMinter:
     + nft_marketplace_interactor::NftMarketplaceInteractorModule
     + views::ViewsModule
     + events::EventsModule
+    + pause::PauseModule
 {
     #[init]
     fn init(
         &self,
-        collections_category: ManagedBuffer,
         royalties_claim_address: ManagedAddress,
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
+        opt_admin: OptionalValue<ManagedAddress>,
     ) {
-        self.collections_category().set(&collections_category);
         self.royalties_claim_address().set(&royalties_claim_address);
         self.mint_payments_claim_address()
             .set(&mint_payments_claim_address);
         self.set_max_nfts_per_transaction(max_nfts_per_transaction);
+
+        if let OptionalValue::Some(admin) = opt_admin {
+            self.add_user_to_admin_list(admin);
+        }
     }
 
     #[only_owner]
