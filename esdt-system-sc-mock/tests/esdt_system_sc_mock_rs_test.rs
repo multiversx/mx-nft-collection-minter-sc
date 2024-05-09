@@ -11,6 +11,11 @@ fn world() -> ScenarioWorld {
 }
 
 #[test]
+fn adder_rs() {
+    world().run("scenarios/adder.scen.json");
+}
+
+#[test]
 fn issue_rs() {
-    multiversx_sc_scenario::run_rs("mandos/esdt_system_sc.scen.json", world());
+    world().run("scenarios/esdt_system_sc.scen.json");
 }
