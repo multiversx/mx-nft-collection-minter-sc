@@ -2,7 +2,7 @@ multiversx_sc::imports!();
 
 use multiversx_sc_modules::pause;
 
-use crate::common_storage::EgldValuePaymentsVecPair;
+use crate::common_storage::{self, EgldValuePaymentsVecPair};
 
 pub mod nft_marketplace_proxy {
     multiversx_sc::imports!();
@@ -20,7 +20,10 @@ pub mod nft_marketplace_proxy {
 
 #[multiversx_sc::module]
 pub trait NftMarketplaceInteractorModule:
-    crate::royalties::RoyaltiesModule + crate::admin_whitelist::AdminWhitelistModule + pause::PauseModule
+    crate::royalties::RoyaltiesModule
+    + crate::admin_whitelist::AdminWhitelistModule
+    + pause::PauseModule
+    + common_storage::CommonStorageModule
 {
     #[endpoint(claimRoyaltiesFromMarketplace)]
     fn claim_royalties_from_marketplace(

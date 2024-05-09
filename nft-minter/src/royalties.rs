@@ -20,13 +20,13 @@ pub trait RoyaltiesModule:
     #[endpoint(changeRoyaltiesForBrand)]
     fn change_royalties_for_brand(&self, brand_id: &BrandId<Self::Api>, new_royalties: BigUint) {
         self.require_caller_is_admin();
-        let is_new_brand = self.registered_brands().insert(brand_id.clone());
-        require!(!is_new_brand, "Brand doesn't exist");
+        let brand_exists = self.registered_brands().contains(brand_id);
+        require!(!brand_exists, "Brand doesn't exist");
         require!(
             new_royalties <= ROYALTIES_MAX,
             "Royalties cannot be over 100%"
         );
-        self.brand_info(&brand_id)
+        self.brand_info(brand_id)
             .update(|brand| brand.royalties = new_royalties)
     }
 
