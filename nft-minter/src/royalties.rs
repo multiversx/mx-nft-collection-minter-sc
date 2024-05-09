@@ -2,14 +2,32 @@ multiversx_sc::imports!();
 
 use multiversx_sc_modules::pause;
 
-use crate::common_storage::EgldValuePaymentsVecPair;
+use crate::brand_creation::ROYALTIES_MAX;
+use crate::common_storage::{self, BrandId, EgldValuePaymentsVecPair};
 
 #[multiversx_sc::module]
-pub trait RoyaltiesModule: crate::admin_whitelist::AdminWhitelistModule + pause::PauseModule {
+pub trait RoyaltiesModule:
+    crate::admin_whitelist::AdminWhitelistModule
+    + pause::PauseModule
+    + common_storage::CommonStorageModule
+{
     #[endpoint(setRoyaltiesClaimAddress)]
     fn set_royalties_claim_address(&self, new_address: ManagedAddress) {
         self.require_caller_is_admin();
         self.royalties_claim_address().set(&new_address);
+    }
+
+    #[endpoint(changeRoyaltiesForBrand)]
+    fn change_royalties_for_brand(&self, brand_id: &BrandId<Self::Api>, new_royalties: BigUint) {
+        self.require_caller_is_admin();
+        let brand_exists = self.registered_brands().contains(brand_id);
+        require!(!brand_exists, "Brand doesn't exist");
+        require!(
+            new_royalties <= ROYALTIES_MAX,
+            "Royalties cannot be over 100%"
+        );
+        self.brand_info(brand_id)
+            .update(|brand| brand.royalties = new_royalties)
     }
 
     #[endpoint(setMintPaymentsClaimAddress)]
