@@ -1,10 +1,9 @@
 use crate::nft_minter_setup::NftMinterSetup;
 use multiversx_sc::types::{Address, MultiValueEncoded};
 use multiversx_sc_scenario::{
-    managed_address, rust_biguint,
-    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
-    whitebox::TxResult,
-    DebugApi,
+    imports::TxResult,
+    imports::{BlockchainStateWrapper, ContractObjWrapper},
+    managed_address, rust_biguint, DebugApi,
 };
 use nft_minter::royalties::RoyaltiesModule;
 use royalties_handler::nft_minter_interactor::NftMinterInteractorModule;

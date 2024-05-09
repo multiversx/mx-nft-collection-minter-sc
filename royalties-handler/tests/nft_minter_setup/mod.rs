@@ -4,10 +4,8 @@ use multiversx_sc::{
     types::{Address, EsdtLocalRole, ManagedVec, MultiValueEncoded},
 };
 use multiversx_sc_scenario::{
-    managed_address, managed_biguint, managed_buffer, rust_biguint,
-    whitebox::TxResult,
-    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
-    DebugApi,
+    imports::{BlockchainStateWrapper, ContractObjWrapper, TxResult},
+    managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi,
 };
 use nft_minter::brand_creation::BrandCreationModule;
 use nft_minter::nft_attributes_builder::COLLECTION_HASH_LEN;
