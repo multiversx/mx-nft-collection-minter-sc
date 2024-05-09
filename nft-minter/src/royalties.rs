@@ -26,7 +26,7 @@ pub trait RoyaltiesModule:
             new_royalties <= ROYALTIES_MAX,
             "Royalties cannot be over 100%"
         );
-        self.brand_info(&brand_id)
+        self.brand_info(brand_id)
             .update(|brand| brand.royalties = new_royalties)
     }
 
