@@ -15,18 +15,21 @@ pub trait FactoryModule {
             !self.nft_minter_template_address().is_empty(),
             "Nft minter contract template is empty"
         );
-        let (new_address, ()) = self
-            .nft_minter_contract_proxy()
+        let new_address = self
+            .tx()
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .init(
                 royalties_claim_address,
                 mint_payments_claim_address,
                 max_nfts_per_transaction,
                 OptionalValue::Some(admin.clone()),
             )
-            .deploy_from_source(
-                &self.nft_minter_template_address().get(),
+            .code_metadata(
                 CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
-            );
+            )
+            .from_source(self.nft_minter_template_address().get())
+            .returns(ReturnsNewManagedAddress)
+            .sync_call();
 
         self.user_nft_minter_contracts(&admin)
             .insert(new_address.clone());
@@ -57,12 +60,6 @@ pub trait FactoryModule {
             .from_source(self.nft_minter_template_address().get())
             .upgrade_async_call_and_exit();
     }
-
-    #[proxy]
-    fn nft_minter_contract_proxy(&self) -> nft_minter::Proxy<Self::Api>;
-
-    #[proxy]
-    fn user_nft_minter_proxy(&self, to: ManagedAddress) -> nft_minter::Proxy<Self::Api>;
 
     #[view(getUserNftMinterContracts)]
     #[storage_mapper("userNftMinterContracts")]
