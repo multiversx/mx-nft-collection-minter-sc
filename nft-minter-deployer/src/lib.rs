@@ -96,7 +96,7 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
             .to(nft_minter_address)
             .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .pause_endpoint()
-            .sync_call_same_context();
+            .sync_call();
     }
 
     #[only_owner]
@@ -112,7 +112,7 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
             .to(nft_minter_address)
             .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .unpause_endpoint()
-            .sync_call_same_context();
+            .sync_call();
     }
 
     #[only_owner]
@@ -131,7 +131,7 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
             .to(nft_minter_address)
             .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .add_user_to_admin_list(admin_address)
-            .sync_call_same_context();
+            .sync_call();
     }
 
     #[only_owner]
@@ -151,7 +151,7 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
             .to(nft_minter_address)
             .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .remove_user_from_admin_list(admin_address)
-            .sync_call_same_context();
+            .sync_call();
     }
 
     #[only_owner]
