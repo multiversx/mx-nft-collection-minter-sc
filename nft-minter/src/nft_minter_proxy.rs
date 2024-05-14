@@ -550,7 +550,7 @@ where
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct MintPrice<Api>
 where
     Api: ManagedTypeApi,
@@ -560,7 +560,7 @@ where
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TopEncode, TopDecode)]
 pub struct BrandInfoViewResultType<Api>
 where
     Api: ManagedTypeApi,
@@ -572,7 +572,7 @@ where
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct BrandInfo<Api>
 where
     Api: ManagedTypeApi,
@@ -586,14 +586,14 @@ where
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct TimePeriod {
     pub start: u64,
     pub end: u64,
 }
 
 #[type_abi]
-#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode)]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, Debug, PartialEq)]
 pub struct TierInfoEntry<Api>
 where
     Api: ManagedTypeApi,

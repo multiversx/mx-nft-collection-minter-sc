@@ -5,7 +5,8 @@ use nft_minter::common_storage::PaymentsVec;
 
 pub const FIRST_ENTRY_ID: usize = 1;
 
-#[derive(TypeAbi, TopEncode, TopDecode, PartialEq, Debug)]
+#[type_abi]
+#[derive(TopEncode, TopDecode, PartialEq, Debug)]
 pub struct RewardEntry<M: ManagedTypeApi> {
     pub egld_amount: BigUint<M>,
     pub esdt_payments: PaymentsVec<M>,
