@@ -1,4 +1,6 @@
 [workspace]
+resolver = "2"
+
 members = [
   "nft-minter",
   "nft-minter/meta",
