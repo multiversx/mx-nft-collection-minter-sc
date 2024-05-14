@@ -50,15 +50,6 @@ where
         let nm_wrapper =
             b_mock.create_sc_account(&rust_zero, Some(&owner_address), builder, "nft minter path");
 
-        // // init ESDT System SC mock
-        // b_mock.create_sc_account_fixed_address(
-        //     &Address::from(ESDT_SYSTEM_SC_ADDRESS_ARRAY),
-        //     &rust_zero,
-        //     None,
-        //     esdt_system_sc_mock::contract_obj,
-        //     "ESDT system SC mock path",
-        // );
-
         b_mock
             .execute_tx(&owner_address, &nm_wrapper, &rust_zero, |sc| {
                 sc.init(
