@@ -1,5 +1,6 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
+pub use nft_minter;
 
 #[multiversx_sc::module]
 pub trait FactoryModule {
@@ -41,18 +42,20 @@ pub trait FactoryModule {
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
     ) {
-        self.nft_minter_contract_proxy()
-            .contract(nft_minter_address)
-            .init(
-                royalties_claim_address,
-                mint_payments_claim_address,
-                max_nfts_per_transaction,
+        self.tx()
+            .to(nft_minter_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
+            .upgrade(
+                &royalties_claim_address,
+                &mint_payments_claim_address,
+                &max_nfts_per_transaction,
                 OptionalValue::None::<ManagedAddress>,
             )
-            .upgrade_from_source(
-                &self.nft_minter_template_address().get(),
+            .code_metadata(
                 CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
-            );
+            )
+            .from_source(self.nft_minter_template_address().get())
+            .upgrade_async_call_and_exit();
     }
 
     #[proxy]
