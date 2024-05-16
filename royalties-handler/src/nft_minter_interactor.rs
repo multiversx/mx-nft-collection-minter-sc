@@ -35,7 +35,8 @@ pub trait NftMinterInteractorModule:
             .to(sc_address)
             .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .claim_royalties()
-            .execute_on_dest_context()
+            .returns(ReturnsResult)
+            .sync_call()
     }
 
     fn call_claim_mint_payments(
@@ -46,7 +47,8 @@ pub trait NftMinterInteractorModule:
             .to(sc_address)
             .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .claim_mint_payments()
-            .execute_on_dest_context()
+            .returns(ReturnsResult)
+            .sync_call()
     }
 
     #[view(getNftMinterScAddress)]
