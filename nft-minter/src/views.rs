@@ -7,7 +7,8 @@ use crate::{
     nft_tier::{TierName, MAX_TIERS_PER_BRAND},
 };
 
-#[derive(TypeAbi, TopEncode, TopDecode)]
+#[type_abi]
+#[derive(TopEncode, TopDecode)]
 pub struct BrandInfoViewResultType<M: ManagedTypeApi> {
     pub brand_id: BrandId<M>,
     pub nft_token_id: TokenIdentifier<M>,
@@ -15,7 +16,8 @@ pub struct BrandInfoViewResultType<M: ManagedTypeApi> {
     pub tier_info_entries: ArrayVec<TierInfoEntry<M>, MAX_TIERS_PER_BRAND>,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, Debug, PartialEq)]
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, Debug, PartialEq)]
 pub struct TierInfoEntry<M: ManagedTypeApi> {
     pub tier: TierName<M>,
     pub total_nfts: usize,

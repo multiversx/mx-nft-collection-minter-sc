@@ -1,0 +1,4 @@
+[settings]
+
+[[proxy]]
+path = "src/nft_minter_proxy.rs"

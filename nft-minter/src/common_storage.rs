@@ -10,7 +10,8 @@ pub type PaymentsVec<M> = ManagedVec<M, EsdtTokenPayment<M>>;
 pub type EgldValuePaymentsVecPair<M> = MultiValue2<BigUint<M>, PaymentsVec<M>>;
 pub type BrandId<M> = ManagedBuffer<M>;
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct BrandInfo<M: ManagedTypeApi> {
     pub collection_hash: CollectionHash<M>,
     pub token_display_name: ManagedBuffer<M>,
@@ -20,13 +21,15 @@ pub struct BrandInfo<M: ManagedTypeApi> {
     pub whitelist_expire_timestamp: u64,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct TimePeriod {
     pub start: u64,
     pub end: u64,
 }
 
-#[derive(TypeAbi, TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
+#[type_abi]
+#[derive(TopEncode, TopDecode, NestedEncode, NestedDecode, PartialEq, Debug)]
 pub struct MintPrice<M: ManagedTypeApi> {
     pub token_id: EgldOrEsdtTokenIdentifier<M>,
     pub amount: BigUint<M>,

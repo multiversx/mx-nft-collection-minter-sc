@@ -8,6 +8,7 @@ pub mod common_storage;
 pub mod events;
 pub mod nft_attributes_builder;
 pub mod nft_marketplace_interactor;
+pub mod nft_minter_proxy;
 pub mod nft_minting;
 pub mod nft_tier;
 pub mod royalties;
@@ -47,7 +48,7 @@ pub trait NftMinter:
         }
     }
 
-    #[endpoint]
+    #[upgrade]
     fn upgrade(
         &self,
         royalties_claim_address: ManagedAddress,

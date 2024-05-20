@@ -1,6 +1,6 @@
 multiversx_sc::imports!();
 
-use nft_minter::{common_storage::EgldValuePaymentsVecPair, royalties::ProxyTrait as _};
+use nft_minter::common_storage::EgldValuePaymentsVecPair;
 
 #[multiversx_sc::module]
 pub trait NftMinterInteractorModule:
@@ -31,22 +31,25 @@ pub trait NftMinterInteractorModule:
         &self,
         sc_address: ManagedAddress,
     ) -> EgldValuePaymentsVecPair<Self::Api> {
-        self.nft_minter_proxy(sc_address)
+        self.tx()
+            .to(sc_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .claim_royalties()
-            .execute_on_dest_context()
+            .returns(ReturnsResult)
+            .sync_call()
     }
 
     fn call_claim_mint_payments(
         &self,
         sc_address: ManagedAddress,
     ) -> EgldValuePaymentsVecPair<Self::Api> {
-        self.nft_minter_proxy(sc_address)
+        self.tx()
+            .to(sc_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .claim_mint_payments()
-            .execute_on_dest_context()
+            .returns(ReturnsResult)
+            .sync_call()
     }
-
-    #[proxy]
-    fn nft_minter_proxy(&self, sc_address: ManagedAddress) -> nft_minter::Proxy<Self::Api>;
 
     #[view(getNftMinterScAddress)]
     #[storage_mapper("nftMinterScAddress")]

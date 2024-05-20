@@ -1,7 +1,8 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-#[derive(TypeAbi, TopEncode)]
+#[type_abi]
+#[derive(TopEncode)]
 pub struct CreateNftMinterEvent<M: ManagedTypeApi> {
     royalties_claim_address: ManagedAddress<M>,
     mint_payments_claim_address: ManagedAddress<M>,

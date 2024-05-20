@@ -43,7 +43,8 @@ pub trait NftMarketplaceInteractorModule:
         let call_result: EgldValuePaymentsVecPair<Self::Api> = self
             .nft_marketplace_proxy_builder(marketplace_address)
             .claim_tokens(own_sc_address, args)
-            .execute_on_dest_context();
+            .returns(ReturnsResult)
+            .sync_call();
 
         let (egld_amount, other_payments) = call_result.into_tuple();
         if egld_amount > 0 {

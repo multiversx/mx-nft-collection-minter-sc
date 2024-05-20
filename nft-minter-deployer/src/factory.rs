@@ -1,5 +1,6 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
+pub use nft_minter;
 
 #[multiversx_sc::module]
 pub trait FactoryModule {
@@ -14,18 +15,21 @@ pub trait FactoryModule {
             !self.nft_minter_template_address().is_empty(),
             "Nft minter contract template is empty"
         );
-        let (new_address, ()) = self
-            .nft_minter_contract_proxy()
+        let new_address = self
+            .tx()
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .init(
                 royalties_claim_address,
                 mint_payments_claim_address,
                 max_nfts_per_transaction,
                 OptionalValue::Some(admin.clone()),
             )
-            .deploy_from_source(
-                &self.nft_minter_template_address().get(),
+            .code_metadata(
                 CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
-            );
+            )
+            .from_source(self.nft_minter_template_address().get())
+            .returns(ReturnsNewManagedAddress)
+            .sync_call();
 
         self.user_nft_minter_contracts(&admin)
             .insert(new_address.clone());
@@ -41,25 +45,21 @@ pub trait FactoryModule {
         mint_payments_claim_address: ManagedAddress,
         max_nfts_per_transaction: usize,
     ) {
-        self.nft_minter_contract_proxy()
-            .contract(nft_minter_address)
-            .init(
-                royalties_claim_address,
-                mint_payments_claim_address,
-                max_nfts_per_transaction,
+        self.tx()
+            .to(nft_minter_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
+            .upgrade(
+                &royalties_claim_address,
+                &mint_payments_claim_address,
+                &max_nfts_per_transaction,
                 OptionalValue::None::<ManagedAddress>,
             )
-            .upgrade_from_source(
-                &self.nft_minter_template_address().get(),
+            .code_metadata(
                 CodeMetadata::UPGRADEABLE | CodeMetadata::READABLE | CodeMetadata::PAYABLE_BY_SC,
-            );
+            )
+            .from_source(self.nft_minter_template_address().get())
+            .upgrade_async_call_and_exit();
     }
-
-    #[proxy]
-    fn nft_minter_contract_proxy(&self) -> nft_minter::Proxy<Self::Api>;
-
-    #[proxy]
-    fn user_nft_minter_proxy(&self, to: ManagedAddress) -> nft_minter::Proxy<Self::Api>;
 
     #[view(getUserNftMinterContracts)]
     #[storage_mapper("userNftMinterContracts")]

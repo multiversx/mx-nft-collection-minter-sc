@@ -3,9 +3,6 @@
 multiversx_sc::imports!();
 multiversx_sc::derive_imports!();
 
-use multiversx_sc_modules::pause::ProxyTrait as _;
-use nft_minter::admin_whitelist::ProxyTrait as _;
-
 mod events;
 pub mod factory;
 
@@ -95,10 +92,11 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
             "NFT Minter contract does not exist"
         );
 
-        let _: IgnoreValue = self
-            .user_nft_minter_proxy(nft_minter_address)
+        self.tx()
+            .to(nft_minter_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .pause_endpoint()
-            .execute_on_dest_context();
+            .sync_call();
     }
 
     #[only_owner]
@@ -110,10 +108,11 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
             "NFT Minter contract does not exist"
         );
 
-        let _: IgnoreValue = self
-            .user_nft_minter_proxy(nft_minter_address)
+        self.tx()
+            .to(nft_minter_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .unpause_endpoint()
-            .execute_on_dest_context();
+            .sync_call();
     }
 
     #[only_owner]
@@ -128,11 +127,11 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
                 .contains(&nft_minter_address),
             "NFT Minter contract does not exist"
         );
-
-        let _: IgnoreValue = self
-            .user_nft_minter_proxy(nft_minter_address)
+        self.tx()
+            .to(nft_minter_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .add_user_to_admin_list(admin_address)
-            .execute_on_dest_context();
+            .sync_call();
     }
 
     #[only_owner]
@@ -148,10 +147,11 @@ pub trait NftMinterDeployer: factory::FactoryModule + events::EventsModule {
             "NFT Minter contract does not exist"
         );
 
-        let _: IgnoreValue = self
-            .user_nft_minter_proxy(nft_minter_address)
+        self.tx()
+            .to(nft_minter_address)
+            .typed(nft_minter::nft_minter_proxy::NftMinterProxy)
             .remove_user_from_admin_list(admin_address)
-            .execute_on_dest_context();
+            .sync_call();
     }
 
     #[only_owner]

@@ -12,10 +12,10 @@ path = "src/lib.rs"
 path = "../nft-minter"
 
 [dependencies.multiversx-sc]
-version = "=0.41.3"
+version = "=0.50.0"
 
 [dependencies.multiversx-sc-modules]
-version = "=0.41.3"
+version = "=0.50.0"
 
 [dev-dependencies.multiversx-sc-scenario]
-version = "=0.41.3"
+version = "=0.50.0"

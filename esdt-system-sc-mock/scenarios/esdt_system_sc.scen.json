@@ -19,7 +19,7 @@
                         }
                     },
                     "storage": {},
-                    "code": "file:../output/esdt-system-sc-mock.wasm"
+                    "code": "mxsc:../output/esdt-system-sc-mock.mxsc.json"
                 }
             }
         },
@@ -97,7 +97,7 @@
                     "storage": {
                         "str:nrIssuedTokens": "1"
                     },
-                    "code": "file:../output/esdt-system-sc-mock.wasm"
+                    "code": "mxsc:../output/esdt-system-sc-mock.mxsc.json"
                 }
             }
         },

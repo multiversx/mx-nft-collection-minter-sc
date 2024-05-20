@@ -4,10 +4,8 @@ use multiversx_sc::{
     types::{Address, EsdtLocalRole, ManagedVec, MultiValueEncoded},
 };
 use multiversx_sc_scenario::{
-    managed_address, managed_biguint, managed_buffer, rust_biguint,
-    whitebox::TxResult,
-    whitebox::{BlockchainStateWrapper, ContractObjWrapper},
-    DebugApi,
+    imports::{BlockchainStateWrapper, ContractObjWrapper, TxResult},
+    managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi,
 };
 use nft_minter::brand_creation::BrandCreationModule;
 use nft_minter::nft_attributes_builder::COLLECTION_HASH_LEN;
@@ -51,15 +49,6 @@ where
         let second_user_address = b_mock.create_user_account(&rust_biguint!(USER_EGLD_BALANCE));
         let nm_wrapper =
             b_mock.create_sc_account(&rust_zero, Some(&owner_address), builder, "nft minter path");
-
-        // init ESDT System SC mock
-        b_mock.create_sc_account_fixed_address(
-            &Address::from(ESDT_SYSTEM_SC_ADDRESS_ARRAY),
-            &rust_zero,
-            None,
-            esdt_system_sc_mock::contract_obj,
-            "ESDT system SC mock path",
-        );
 
         b_mock
             .execute_tx(&owner_address, &nm_wrapper, &rust_zero, |sc| {

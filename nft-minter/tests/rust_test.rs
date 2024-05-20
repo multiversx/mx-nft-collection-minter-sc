@@ -3,7 +3,9 @@ pub mod nft_minter_interactor;
 
 use constants::*;
 use multiversx_sc::types::{ManagedBuffer, ManagedByteArray, MultiValueEncoded};
-use multiversx_sc_scenario::{managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi};
+use multiversx_sc_scenario::{
+    managed_address, managed_biguint, managed_buffer, rust_biguint, DebugApi,
+};
 use nft_minter::brand_creation::BrandCreationModule;
 use nft_minter::common_storage::{BrandInfo, MintPrice, TimePeriod};
 use nft_minter::nft_attributes_builder::{NftAttributesBuilderModule, COLLECTION_HASH_LEN};
@@ -126,6 +128,16 @@ fn create_brands_test() {
                 result.tier_info_entries.as_slice(),
                 expected_tier_info.as_slice()
             );
+        })
+        .assert_ok();
+
+    nm_setup
+        .b_mock
+        .execute_query(&nm_setup.nm_wrapper, |sc| {
+            let result = sc.get_brand_info_view(managed_buffer!(SECOND_BRAND_ID));
+
+            let expected_token_id = managed_token_id!(SECOND_TOKEN_ID);
+            assert_eq!(result.nft_token_id, expected_token_id.unwrap_esdt());
         })
         .assert_ok();
 }

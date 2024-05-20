@@ -6,8 +6,10 @@ publish = false
 authors = ["Dorin Marian Iancu, dorin.iancu@elrond.com"]
 
 [dev-dependencies]
+
 [dependencies.royalties-handler]
 path = ".."
 
 [dependencies.multiversx-sc-meta]
-version = "=0.41.3"
+version = "=0.50.0"
+default-features = false

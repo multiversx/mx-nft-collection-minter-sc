@@ -4,7 +4,7 @@ fn world() -> ScenarioWorld {
     let mut blockchain = ScenarioWorld::new();
     blockchain.set_current_dir_from_workspace("esdt-system-sc-mock");
     blockchain.register_contract(
-        "file:output/esdt-system-sc-mock.wasm",
+        "mxsc:output/esdt-system-sc-mock.mxsc.json",
         esdt_system_sc_mock::ContractBuilder,
     );
     blockchain
@@ -12,5 +12,5 @@ fn world() -> ScenarioWorld {
 
 #[test]
 fn issue_rs() {
-    multiversx_sc_scenario::run_rs("mandos/esdt_system_sc.scen.json", world());
+    world().run("scenarios/esdt_system_sc.scen.json");
 }
