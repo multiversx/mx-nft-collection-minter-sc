@@ -16,6 +16,6 @@ jobs:
     uses: multiversx/mx-sc-actions/.github/workflows/contracts.yml@v4.2.1
     with:
       rust-toolchain: stable
-      enable-contracts-size-report: true
+      enable-contracts-size-report: false
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
